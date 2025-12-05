@@ -53,6 +53,14 @@ npm install
 npm run dev
 ```
 
+The server will start on `http://localhost:5001` (or the PORT specified in your `.env`).
+
+You should see:
+```
+Database synced successfully
+Server running on port 5001
+```
+
 ### 3. Client Setup
 
 ```bash
@@ -105,8 +113,15 @@ DB_USER=root
 DB_PASSWORD=your_password
 DB_NAME=booktrack
 DB_PORT=3306
-JWT_SECRET=your_jwt_secret
+JWT_SECRET=your_generated_jwt_secret_key
 JWT_EXPIRES_IN=7d
-PORT=5000
+PORT=5001
 GOOGLE_BOOKS_API_KEY=optional_api_key
 ```
+
+**Note:** Generate a strong JWT_SECRET with:
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+
+Each team member needs their own local `.env` file with their MySQL credentials.

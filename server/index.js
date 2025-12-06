@@ -29,7 +29,7 @@ app.get('/api/health', (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 // Sync database and start server
-sequelize.sync({ alter: true })
+sequelize.sync()
   .then(() => {
     console.log('Database synced successfully');
     app.listen(PORT, () => {

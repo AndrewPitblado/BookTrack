@@ -1,5 +1,5 @@
 const express = require('express');
-const { UserBook, Book, ReadHistory } = require('../models');
+const { UserProgress, Book } = require('../models');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
@@ -14,10 +14,9 @@ router.get('/', auth, async (req, res) => {
       where.status = status;
     }
 
-    const userBooks = await UserBook.findAll({
+    const userBooks = await UserProgress.findAll({
       where,
       include: [{ model: Book }],
-      order: [['updatedAt', 'DESC']],
     });
 
     res.json({ userBooks });
@@ -37,7 +36,7 @@ router.post('/', auth, async (req, res) => {
     }
 
     // Check if already in user's list
-    const existing = await UserBook.findOne({
+    const existing = await UserProgress.findOne({
       where: { userId: req.userId, bookId },
     });
 
@@ -45,14 +44,14 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ message: 'Book already in your list' });
     }
 
-    const userBook = await UserBook.create({
+    const userBook = await UserProgress.create({
       userId: req.userId,
       bookId,
       status,
-      startDate: startDate || new Date(),
     });
 
-    const userBookWithDetails = await UserBook.findByPk(userBook.id, {
+    const userBookWithDetails = await UserProgress.findOne({
+      where: { userId: req.userId, bookId },
       include: [{ model: Book }],
     });
 
@@ -66,10 +65,11 @@ router.post('/', auth, async (req, res) => {
 // PUT /api/user-books/:id - Update book status
 router.put('/:id', auth, async (req, res) => {
   try {
-    const { status, startDate, endDate } = req.body;
+    const { status, currentPage, totalPages } = req.body;
+    const bookId = req.params.id; // Since we don't have a unique ID, we use bookId from URL
 
-    const userBook = await UserBook.findOne({
-      where: { id: req.params.id, userId: req.userId },
+    const userBook = await UserProgress.findOne({
+      where: { bookId, userId: req.userId },
       include: [{ model: Book }],
     });
 
@@ -77,25 +77,10 @@ router.put('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'Book not found in your list' });
     }
 
-    const previousStatus = userBook.status;
-
     // Update fields
     if (status) userBook.status = status;
-    if (startDate) userBook.startDate = startDate;
-    if (endDate) userBook.endDate = endDate;
-
-    // If marked as finished, set endDate and create read history
-    if (status === 'finished' && previousStatus !== 'finished') {
-      userBook.endDate = endDate || new Date();
-      
-      // Add to read history
-      await ReadHistory.create({
-        userId: req.userId,
-        bookId: userBook.bookId,
-        startDate: userBook.startDate,
-        endDate: userBook.endDate,
-      });
-    }
+    if (currentPage) userBook.currentPage = currentPage;
+    if (totalPages) userBook.totalPages = totalPages;
 
     await userBook.save();
 
@@ -109,8 +94,9 @@ router.put('/:id', auth, async (req, res) => {
 // DELETE /api/user-books/:id - Remove book from list
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const userBook = await UserBook.findOne({
-      where: { id: req.params.id, userId: req.userId },
+    const bookId = req.params.id;
+    const userBook = await UserProgress.findOne({
+      where: { bookId, userId: req.userId },
     });
 
     if (!userBook) {
@@ -122,22 +108,6 @@ router.delete('/:id', auth, async (req, res) => {
     res.json({ message: 'Book removed from your list' });
   } catch (error) {
     console.error('Delete user book error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// GET /api/user-books/history - Get read history
-router.get('/history', auth, async (req, res) => {
-  try {
-    const history = await ReadHistory.findAll({
-      where: { userId: req.userId },
-      include: [{ model: Book }],
-      order: [['endDate', 'DESC']],
-    });
-
-    res.json({ history });
-  } catch (error) {
-    console.error('Get history error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

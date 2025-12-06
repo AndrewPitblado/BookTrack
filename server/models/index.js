@@ -1,40 +1,56 @@
 const sequelize = require('../config/database');
 const User = require('./User');
 const Book = require('./Book');
-const UserBook = require('./UserBook');
-const ReadHistory = require('./ReadHistory');
 const Achievement = require('./Achievement');
 const UserAchievement = require('./UserAchievement');
+const UserProgress = require('./UserProgress');
+const Author = require('./Author');
+const AuthorBook = require('./AuthorBook');
 
-// Define associations
+// User <-> UserProgress <-> Book
+User.hasMany(UserProgress, { foreignKey: 'userId', as: 'progress' });
+UserProgress.belongsTo(User, { foreignKey: 'userId' });
 
-// User <-> UserBook <-> Book
-User.hasMany(UserBook, { foreignKey: 'userId', as: 'userBooks' });
-UserBook.belongsTo(User, { foreignKey: 'userId' });
-
-Book.hasMany(UserBook, { foreignKey: 'bookId', as: 'userBooks' });
-UserBook.belongsTo(Book, { foreignKey: 'bookId' });
-
-// User <-> ReadHistory <-> Book
-User.hasMany(ReadHistory, { foreignKey: 'userId', as: 'readHistory' });
-ReadHistory.belongsTo(User, { foreignKey: 'userId' });
-
-Book.hasMany(ReadHistory, { foreignKey: 'bookId', as: 'readHistory' });
-ReadHistory.belongsTo(Book, { foreignKey: 'bookId' });
+Book.hasMany(UserProgress, { foreignKey: 'bookId', as: 'progress' });
+UserProgress.belongsTo(Book, { foreignKey: 'bookId' });
 
 // User <-> UserAchievement <-> Achievement
-User.hasMany(UserAchievement, { foreignKey: 'userId', as: 'userAchievements' });
-UserAchievement.belongsTo(User, { foreignKey: 'userId' });
+User.belongsToMany(Achievement, { 
+  through: UserAchievement, 
+  foreignKey: 'userId', 
+  otherKey: 'achievementId',
+  as: 'achievements' 
+});
 
-Achievement.hasMany(UserAchievement, { foreignKey: 'achievementId', as: 'userAchievements' });
-UserAchievement.belongsTo(Achievement, { foreignKey: 'achievementId' });
+Achievement.belongsToMany(User, { 
+  through: UserAchievement, 
+  foreignKey: 'achievementId', 
+  otherKey: 'userId',
+  as: 'users' 
+});
+
+// Author <-> AuthorBook <-> Book
+Author.belongsToMany(Book, { 
+  through: AuthorBook, 
+  foreignKey: 'authorId', 
+  otherKey: 'bookId',
+  as: 'books' 
+});
+
+Book.belongsToMany(Author, { 
+  through: AuthorBook, 
+  foreignKey: 'bookId', 
+  otherKey: 'authorId',
+  as: 'authorList' 
+});
 
 module.exports = {
   sequelize,
   User,
   Book,
-  UserBook,
-  ReadHistory,
   Achievement,
   UserAchievement,
+  UserProgress,
+  Author,
+  AuthorBook,
 };

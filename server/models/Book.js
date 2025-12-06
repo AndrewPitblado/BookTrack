@@ -2,49 +2,41 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
 const Book = sequelize.define('Book', {
-  id: {
-    type: DataTypes.INTEGER,
+  isbn: {
+    type: DataTypes.STRING(13),
     primaryKey: true,
-    autoIncrement: true,
-  },
-  googleBooksId: {
-    type: DataTypes.STRING(50),
-    unique: true,
-    allowNull: true,
+    allowNull: false,
   },
   title: {
     type: DataTypes.STRING(255),
     allowNull: false,
   },
   authors: {
-    type: DataTypes.JSON,
-    allowNull: true,
-    defaultValue: [],
-  },
-  description: {
-    type: DataTypes.TEXT,
-    allowNull: true,
-  },
-  thumbnail: {
     type: DataTypes.STRING(500),
     allowNull: true,
   },
   pageCount: {
     type: DataTypes.INTEGER,
     allowNull: true,
+    field: 'page_count'
+  },
+  genre: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
   },
   publishedDate: {
-    type: DataTypes.STRING(20),
+    type: DataTypes.DATEONLY,
     allowNull: true,
+    field: 'published_date'
   },
-  categories: {
-    type: DataTypes.JSON,
+  authorId: {
+    type: DataTypes.INTEGER,
     allowNull: true,
-    defaultValue: [],
-  },
+    field: 'author_id'
+  }
 }, {
   tableName: 'books',
-  timestamps: true,
+  timestamps: false,
 });
 
 module.exports = Book;

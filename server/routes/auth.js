@@ -106,7 +106,7 @@ router.post('/login', async (req, res) => {
 router.get('/me', require('../middleware/auth'), async (req, res) => {
   try {
     const user = await User.findByPk(req.userId, {
-      attributes: ['id', 'username', 'email', 'createdAt'],
+      attributes: ['id', 'username', 'email'],
     });
 
     if (!user) {

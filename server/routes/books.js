@@ -1,42 +1,33 @@
 const express = require('express');
-const axios = require('axios');
+const { Op } = require('sequelize');
 const { Book } = require('../models');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// GET /api/books/search - Search Google Books API
+// GET /api/books/search - Search Local Database
 router.get('/search', auth, async (req, res) => {
   try {
-    const { q, maxResults = 10 } = req.query;
+    const { q } = req.query;
 
     if (!q) {
       return res.status(400).json({ message: 'Search query is required' });
     }
 
-    const apiKey = process.env.GOOGLE_BOOKS_API_KEY;
-    let url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=${maxResults}`;
-    
-    if (apiKey) {
-      url += `&key=${apiKey}`;
-    }
-
-    const response = await axios.get(url);
-    
-    const books = (response.data.items || []).map((item) => ({
-      googleBooksId: item.id,
-      title: item.volumeInfo.title,
-      authors: item.volumeInfo.authors || [],
-      description: item.volumeInfo.description || '',
-      thumbnail: item.volumeInfo.imageLinks?.thumbnail || null,
-      pageCount: item.volumeInfo.pageCount || null,
-      publishedDate: item.volumeInfo.publishedDate || null,
-      categories: item.volumeInfo.categories || [],
-    }));
+    const books = await Book.findAll({
+      where: {
+        [Op.or]: [
+          { title: { [Op.like]: `%${q}%` } },
+          { authors: { [Op.like]: `%${q}%` } },
+          { isbn: { [Op.like]: `%${q}%` } }
+        ]
+      },
+      limit: 20
+    });
 
     res.json({ books });
   } catch (error) {
-    console.error('Google Books search error:', error);
+    console.error('Search error:', error);
     res.status(500).json({ message: 'Error searching books' });
   }
 });

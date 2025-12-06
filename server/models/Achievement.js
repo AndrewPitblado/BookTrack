@@ -6,28 +6,39 @@ const Achievement = sequelize.define('Achievement', {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
+    field: 'achievement_id'
   },
-  name: {
-    type: DataTypes.STRING(100),
+  title: {
+    type: DataTypes.STRING(255),
     allowNull: false,
-    unique: true,
   },
   description: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  icon_logo: {
     type: DataTypes.STRING(255),
     allowNull: true,
   },
-  criteria: {
-    type: DataTypes.JSON,
+  rarity: {
+    type: DataTypes.STRING(50),
     allowNull: true,
-    // Example: { type: 'books_finished', count: 5 }
   },
-  icon: {
+  trigger_event: {
     type: DataTypes.STRING(100),
     allowNull: true,
   },
+  condition_type: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+  },
+  condition_value: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
 }, {
-  tableName: 'achievements',
-  timestamps: true,
+  tableName: 'achievement',
+  timestamps: false,
 });
 
 module.exports = Achievement;

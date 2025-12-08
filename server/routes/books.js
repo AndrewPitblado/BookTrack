@@ -15,7 +15,7 @@ router.get('/search', auth, async (req, res) => {
     }
 
     const apiKey = process.env.GOOGLE_BOOKS_API_KEY;
-    let url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=${maxResults}`;
+    let url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=${maxResults}${apiKey && apiKey !== 'google_books_api_key' ? `&key=${apiKey}` : ''}`;
     
     if (apiKey) {
       url += `&key=${apiKey}`;

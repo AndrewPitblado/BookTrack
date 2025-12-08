@@ -28,6 +28,11 @@ const UserBook = sequelize.define('UserBook', {
     type: DataTypes.DATEONLY,
     allowNull: true,
   },
+  currentPage: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: 0,
+  },
 }, {
   tableName: 'user_books',
   timestamps: true,

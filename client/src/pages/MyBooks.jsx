@@ -31,6 +31,18 @@ const MyBooks = () => {
     }
   };
 
+  const updateProgress = async (id, currentPage) => {
+    try {
+      await api.put(`/user-books/${id}`, { currentPage: parseInt(currentPage) });
+      // Update local state
+      setUserBooks(userBooks.map(book => 
+        book.id === id ? { ...book, currentPage: parseInt(currentPage) } : book
+      ));
+    } catch (error) {
+      console.error('Error updating progress:', error);
+    }
+  };
+
   const removeBook = async (id) => {
     if (!window.confirm('Remove this book from your list?')) return;
     
@@ -99,6 +111,31 @@ const MyBooks = () => {
                   Started: {userBook.startDate || 'N/A'}
                   {userBook.endDate && ` | Ended: ${userBook.endDate}`}
                 </p>
+                
+                {userBook.status === 'reading' && userBook.Book?.pageCount && (
+                  <div className="progress-section">
+                    <div className="progress-bar-container">
+                      <div 
+                        className="progress-bar-fill" 
+                        style={{ 
+                          width: `${Math.min((userBook.currentPage || 0) / userBook.Book.pageCount * 100, 100)}%` 
+                        }}
+                      />
+                    </div>
+                    <div className="progress-input">
+                      <label htmlFor={`page-${userBook.id}`}>Page:</label>
+                      <input
+                        id={`page-${userBook.id}`}
+                        type="number"
+                        min="0"
+                        max={userBook.Book.pageCount}
+                        value={userBook.currentPage || 0}
+                        onChange={(e) => updateProgress(userBook.id, e.target.value)}
+                      />
+                      <span>/ {userBook.Book.pageCount}</span>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="book-actions">
                   <select 

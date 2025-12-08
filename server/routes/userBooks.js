@@ -72,7 +72,7 @@ router.post('/', auth, async (req, res) => {
 // PUT /api/user-books/:id - Update book status
 router.put('/:id', auth, async (req, res) => {
   try {
-    const { status, startDate, endDate } = req.body;
+    const { status, startDate, endDate, currentPage } = req.body;
 
     const userBook = await UserBook.findOne({
       where: { id: req.params.id, userId: req.userId },
@@ -92,6 +92,7 @@ router.put('/:id', auth, async (req, res) => {
     if (status) userBook.status = status;
     if (startDate) userBook.startDate = startDate;
     if (endDate) userBook.endDate = endDate;
+    if (currentPage !== undefined) userBook.currentPage = currentPage;
 
     // If marked as finished, set endDate and create read history
     if (status === 'finished' && previousStatus !== 'finished') {

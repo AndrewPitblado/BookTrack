@@ -7,6 +7,10 @@ const Achievements = () => {
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
   const [totalPoints, setTotalPoints] = useState(0);
+  const [sortBy, setSortBy] = useState('tier'); // 'tier', 'name', 'points', 'progress'
+  const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'unlocked', 'locked'
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   useEffect(() => {
     fetchAchievements();
@@ -68,6 +72,39 @@ const Achievements = () => {
 
   const unlockedCount = achievementProgress.filter(a => a.unlocked).length;
 
+  // Filter achievements
+  const filteredAchievements = achievementProgress.filter(achievement => {
+    if (filterStatus === 'unlocked') return achievement.unlocked;
+    if (filterStatus === 'locked') return !achievement.unlocked;
+    return true;
+  });
+
+  // Sort achievements
+  const sortedAchievements = [...filteredAchievements].sort((a, b) => {
+    switch (sortBy) {
+      case 'name':
+        return a.name.localeCompare(b.name);
+      case 'points':
+        return b.points - a.points;
+      case 'progress':
+        return b.progress.percentage - a.progress.percentage;
+      case 'tier':
+      default:
+        const tierOrder = { platinum: 0, gold: 1, silver: 2, bronze: 3 };
+        return tierOrder[a.tier] - tierOrder[b.tier];
+    }
+  });
+
+  // Paginate achievements
+  const totalPages = Math.ceil(sortedAchievements.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedAchievements = sortedAchievements.slice(startIndex, startIndex + itemsPerPage);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortBy, filterStatus]);
+
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
@@ -86,8 +123,45 @@ const Achievements = () => {
         </button>
       </div>
 
+      <div className="achievements-controls">
+        <div className="filter-tabs">
+          <button 
+            className={filterStatus === 'all' ? 'active' : ''} 
+            onClick={() => setFilterStatus('all')}
+          >
+            All ({achievementProgress.length})
+          </button>
+          <button 
+            className={filterStatus === 'unlocked' ? 'active' : ''} 
+            onClick={() => setFilterStatus('unlocked')}
+          >
+            Unlocked ({unlockedCount})
+          </button>
+          <button 
+            className={filterStatus === 'locked' ? 'active' : ''} 
+            onClick={() => setFilterStatus('locked')}
+          >
+            Locked ({achievementProgress.length - unlockedCount})
+          </button>
+        </div>
+
+        <div className="sort-dropdown">
+          <label htmlFor="sort-select">Sort by:</label>
+          <select 
+            id="sort-select"
+            value={sortBy} 
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="tier">Tier</option>
+            <option value="name">Name</option>
+            <option value="points">Points</option>
+            <option value="progress">Progress</option>
+          </select>
+        </div>
+      </div>
+
       <div className="achievements-grid">
-        {achievementProgress.map((achievement) => {
+        {paginatedAchievements.map((achievement) => {
           const isUnlocked = achievement.unlocked;
           const showDetails = !achievement.isSecret || isUnlocked;
 
@@ -141,10 +215,34 @@ const Achievements = () => {
         })}
       </div>
 
-      {achievementProgress.length === 0 && (
+      {sortedAchievements.length === 0 && (
         <p className="no-achievements">
-          No achievements available yet. Check back later!
+          {achievementProgress.length === 0 
+            ? 'No achievements available yet. Check back later!'
+            : 'No achievements match the current filter.'}
         </p>
+      )}
+
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button 
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+          >
+            ← Previous
+          </button>
+          
+          <div className="pagination-info">
+            Page {currentPage} of {totalPages}
+          </div>
+          
+          <button 
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Next →
+          </button>
+        </div>
       )}
     </div>
   );

@@ -10,8 +10,16 @@ router.get('/search', auth, async (req, res) => {
   try {
     const { q } = req.query;
 
-    if (!q) {
-      return res.status(400).json({ message: 'Search query is required' });
+    if (!q && !author) {
+      return res.status(400).json({ message: 'Search query or author is required' });
+    }
+
+    // Build search query
+    let searchQuery = '';
+    if (author) {
+      searchQuery = `inauthor:${author}`;
+    } else {
+      searchQuery = q;
     }
 
     const books = await Book.findAll({

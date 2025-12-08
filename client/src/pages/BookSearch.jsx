@@ -3,7 +3,8 @@ import api from '../services/api';
 import './BookSearch.css';
 
 const BookSearch = () => {
-  const [query, setQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [authorQuery, setAuthorQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [addingId, setAddingId] = useState(null);
@@ -11,17 +12,19 @@ const BookSearch = () => {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!query.trim()) return;
-
     setLoading(true);
     setMessage('');
 
     try {
-      const response = await api.get(`/books/search?q=${encodeURIComponent(query)}`);
-      setResults(response.data.books);
-    } catch (error) {
-      console.error('Search error:', error);
-      setMessage('Error searching for books');
+      const params = {};
+      if (searchQuery) params.q = searchQuery;
+      if (authorQuery) params.author = authorQuery;
+      
+      const response = await api.get('/books/search', { params });
+      setResults(response.data.books || []);
+    } catch (err) {
+      console.error('Search error:', err);
+      setMessage('Failed to search books');
     } finally {
       setLoading(false);
     }
@@ -51,12 +54,18 @@ const BookSearch = () => {
     <div className="book-search">
       <h1>Search Books</h1>
 
-      <form onSubmit={handleSearch} className="search-form">
+      <form onSubmit={handleSearch}>
         <input
           type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by title, author, or ISBN..."
+          placeholder="Search by title..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Search by author..."
+          value={authorQuery}
+          onChange={(e) => setAuthorQuery(e.target.value)}
         />
         <button type="submit" disabled={loading}>
           {loading ? 'Searching...' : 'Search'}
@@ -95,7 +104,7 @@ const BookSearch = () => {
         ))}
       </div>
 
-      {results.length === 0 && !loading && query && (
+      {results.length === 0 && !loading && (searchQuery || authorQuery) && (
         <p className="no-results">No books found. Try a different search term.</p>
       )}
     </div>

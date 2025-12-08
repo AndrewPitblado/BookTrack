@@ -47,6 +47,8 @@ module.exports = {
   sequelize,
   User,
   Book,
+  Author,
+  BookAuthor,
   UserBook,
   ReadHistory,
   Achievement,

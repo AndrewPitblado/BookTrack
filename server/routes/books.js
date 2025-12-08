@@ -1,6 +1,6 @@
 const express = require('express');
 const axios = require('axios');
-const { Book } = require('../models');
+const { Book, Author } = require('../models');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
@@ -76,7 +76,10 @@ router.post('/', auth, async (req, res) => {
 
     // Check if book already exists by googleBooksId
     if (googleBooksId) {
-      const existingBook = await Book.findOne({ where: { googleBooksId } });
+      const existingBook = await Book.findOne({ 
+        where: { googleBooksId },
+        include: [{ model: Author, as: 'authors', through: { attributes: [] } }]
+      });
       if (existingBook) {
         return res.json({ book: existingBook, message: 'Book already exists' });
       }
@@ -85,15 +88,29 @@ router.post('/', auth, async (req, res) => {
     const book = await Book.create({
       googleBooksId,
       title,
-      authors: authors || [],
       description,
       thumbnail,
       pageCount,
       publishedDate,
-      categories: categories || [],
+      genres: categories || [],
     });
 
-    res.status(201).json({ book, message: 'Book added successfully' });
+    // Create or find authors and associate them with the book
+    if (authors && authors.length > 0) {
+      for (const authorName of authors) {
+        const [author] = await Author.findOrCreate({
+          where: { name: authorName },
+        });
+        await book.addAuthor(author);
+      }
+    }
+
+    // Fetch the book with authors included
+    const bookWithAuthors = await Book.findByPk(book.id, {
+      include: [{ model: Author, as: 'authors', through: { attributes: [] } }]
+    });
+
+    res.status(201).json({ book: bookWithAuthors, message: 'Book added successfully' });
   } catch (error) {
     console.error('Add book error:', error);
     res.status(500).json({ message: 'Server error' });

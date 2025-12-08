@@ -1,5 +1,5 @@
 const express = require('express');
-const { UserBook, Book, ReadHistory } = require('../models');
+const { UserBook, Book, ReadHistory, Author } = require('../models');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
@@ -16,7 +16,10 @@ router.get('/', auth, async (req, res) => {
 
     const userBooks = await UserBook.findAll({
       where,
-      include: [{ model: Book }],
+      include: [{ 
+        model: Book,
+        include: [{ model: Author, as: 'authors', through: { attributes: [] } }]
+      }],
       order: [['updatedAt', 'DESC']],
     });
 
@@ -53,7 +56,10 @@ router.post('/', auth, async (req, res) => {
     });
 
     const userBookWithDetails = await UserBook.findByPk(userBook.id, {
-      include: [{ model: Book }],
+      include: [{ 
+        model: Book,
+        include: [{ model: Author, as: 'authors', through: { attributes: [] } }]
+      }],
     });
 
     res.status(201).json({ userBook: userBookWithDetails });
@@ -70,7 +76,10 @@ router.put('/:id', auth, async (req, res) => {
 
     const userBook = await UserBook.findOne({
       where: { id: req.params.id, userId: req.userId },
-      include: [{ model: Book }],
+      include: [{ 
+        model: Book,
+        include: [{ model: Author, as: 'authors', through: { attributes: [] } }]
+      }],
     });
 
     if (!userBook) {

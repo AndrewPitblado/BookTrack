@@ -93,7 +93,7 @@ const MyBooks = () => {
               <div className="book-info">
                 <h3>{userBook.Book?.title}</h3>
                 <p className="authors">
-                  {userBook.Book?.authors?.join(', ') || 'Unknown Author'}
+                  {userBook.Book?.authors?.map(a => a.name).join(', ') || 'Unknown Author'}
                 </p>
                 <p className="dates">
                   Started: {userBook.startDate || 'N/A'}

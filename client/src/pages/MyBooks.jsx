@@ -36,7 +36,7 @@ const MyBooks = () => {
     
     try {
       await api.delete(`/user-books/${id}`);
-      setUserBooks(userBooks.filter((b) => b.id !== id));
+      setUserBooks(userBooks.filter((b) => b.bookId !== id));
     } catch (error) {
       console.error('Error removing book:', error);
     }
@@ -86,14 +86,16 @@ const MyBooks = () => {
       ) : (
         <div className="books-grid">
           {filteredBooks.map((userBook) => (
-            <div key={userBook.id} className="book-card">
+            <div key={userBook.bookId} className="book-card">
               {userBook.Book?.thumbnail && (
                 <img src={userBook.Book.thumbnail} alt={userBook.Book.title} />
               )}
               <div className="book-info">
                 <h3>{userBook.Book?.title}</h3>
                 <p className="authors">
-                  {userBook.Book?.authors?.join(', ') || 'Unknown Author'}
+                  {Array.isArray(userBook.Book?.authors) 
+                    ? userBook.Book.authors.join(', ') 
+                    : (userBook.Book?.authors || 'Unknown Author')}
                 </p>
                 <p className="dates">
                   Started: {userBook.startDate || 'N/A'}
@@ -103,13 +105,13 @@ const MyBooks = () => {
                 <div className="book-actions">
                   <select 
                     value={userBook.status} 
-                    onChange={(e) => updateStatus(userBook.id, e.target.value)}
+                    onChange={(e) => updateStatus(userBook.bookId, e.target.value)}
                   >
                     <option value="reading">Reading</option>
                     <option value="finished">Finished</option>
                     <option value="dropped">Dropped</option>
                   </select>
-                  <button onClick={() => removeBook(userBook.id)} className="btn-remove">
+                  <button onClick={() => removeBook(userBook.bookId)} className="btn-remove">
                     Remove
                   </button>
                 </div>

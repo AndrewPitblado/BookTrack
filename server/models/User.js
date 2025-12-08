@@ -6,15 +6,17 @@ const User = sequelize.define('User', {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
+    field: 'user_id'
   },
   username: {
     type: DataTypes.STRING(50),
     allowNull: false,
     unique: true,
+    field: 'user_name'
   },
   email: {
     type: DataTypes.STRING(100),
-    allowNull: false,
+    allowNull: true,
     unique: true,
     validate: {
       isEmail: true,
@@ -26,7 +28,7 @@ const User = sequelize.define('User', {
   },
 }, {
   tableName: 'users',
-  timestamps: true,
+  timestamps: false,
 });
 
 module.exports = User;

@@ -2,27 +2,24 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
 const UserAchievement = sequelize.define('UserAchievement', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
-  },
   userId: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    primaryKey: true,
+    field: 'user_id'
   },
   achievementId: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    primaryKey: true,
+    field: 'achievement_id'
   },
-  unlockedAt: {
+  date_earned: {
     type: DataTypes.DATE,
-    allowNull: false,
     defaultValue: DataTypes.NOW,
-  },
+    allowNull: true,
+  }
 }, {
-  tableName: 'user_achievements',
-  timestamps: true,
+  tableName: 'user_achievement',
+  timestamps: false,
 });
 
 module.exports = UserAchievement;

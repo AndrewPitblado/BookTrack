@@ -31,17 +31,13 @@ const BookSearch = () => {
   };
 
   const addToLibrary = async (book) => {
-    setAddingId(book.googleBooksId);
+    setAddingId(book.isbn);
     setMessage('');
 
     try {
-      // First, add or find the book in our database
-      const bookResponse = await api.post('/books', book);
-      const savedBook = bookResponse.data.book;
-
-      // Then add to user's list
+      // The book is already in the DB, so just add to user's list
       await api.post('/user-books', {
-        bookId: savedBook.id,
+        bookId: book.isbn,
         status: 'reading',
       });
 
@@ -80,13 +76,17 @@ const BookSearch = () => {
 
       <div className="search-results">
         {results.map((book) => (
-          <div key={book.googleBooksId} className="result-card">
+          <div key={book.isbn} className="result-card">
             {book.thumbnail && (
               <img src={book.thumbnail} alt={book.title} />
             )}
             <div className="result-info">
               <h3>{book.title}</h3>
-              <p className="authors">{book.authors?.join(', ') || 'Unknown Author'}</p>
+              <p className="authors">
+                {Array.isArray(book.authors) 
+                  ? book.authors.join(', ') 
+                  : (book.authors || 'Unknown Author')}
+              </p>
               {book.pageCount && <p className="pages">{book.pageCount} pages</p>}
               <p className="description">
                 {book.description?.substring(0, 150)}
@@ -94,10 +94,10 @@ const BookSearch = () => {
               </p>
               <button 
                 onClick={() => addToLibrary(book)}
-                disabled={addingId === book.googleBooksId}
+                disabled={addingId === book.isbn}
                 className="btn-add"
               >
-                {addingId === book.googleBooksId ? 'Adding...' : 'Add to Library'}
+                {addingId === book.isbn ? 'Adding...' : 'Add to Library'}
               </button>
             </div>
           </div>

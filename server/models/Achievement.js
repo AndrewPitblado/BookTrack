@@ -21,9 +21,21 @@ const Achievement = sequelize.define('Achievement', {
     allowNull: true,
     // Example: { type: 'books_finished', count: 5 }
   },
+  tier: {
+    type: DataTypes.ENUM('bronze', 'silver', 'gold', 'platinum'),
+    defaultValue: 'bronze',
+  },
   icon: {
     type: DataTypes.STRING(100),
     allowNull: true,
+  },
+  isSecret: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  points: {
+    type: DataTypes.INTEGER,
+    defaultValue: 10,
   },
 }, {
   tableName: 'achievements',

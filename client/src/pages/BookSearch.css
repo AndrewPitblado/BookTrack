@@ -1,7 +1,6 @@
 .book-search {
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 2rem;
 }
 
 .book-search h1 {
@@ -13,6 +12,12 @@
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
+}
+
+@media (max-width: 600px) {
+  .book-search form {
+    flex-direction: column;
+  }
 }
 
 .book-search form input {

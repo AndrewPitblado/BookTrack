@@ -1,6 +1,8 @@
 const sequelize = require('../config/database');
 const User = require('./User');
 const Book = require('./Book');
+const Author = require('./Author');
+const BookAuthor = require('./BookAuthor');
 const UserBook = require('./UserBook');
 const ReadHistory = require('./ReadHistory');
 const Achievement = require('./Achievement');
@@ -14,6 +16,18 @@ UserBook.belongsTo(User, { foreignKey: 'userId' });
 
 Book.hasMany(UserBook, { foreignKey: 'bookId', as: 'userBooks' });
 UserBook.belongsTo(Book, { foreignKey: 'bookId' });
+
+// Book <-> BookAuthor <-> Author (many-to-many)
+Book.belongsToMany(Author, { 
+  through: BookAuthor, 
+  foreignKey: 'bookId',
+  as: 'authors'
+});
+Author.belongsToMany(Book, { 
+  through: BookAuthor, 
+  foreignKey: 'authorId',
+  as: 'books'
+});
 
 // User <-> ReadHistory <-> Book
 User.hasMany(ReadHistory, { foreignKey: 'userId', as: 'readHistory' });

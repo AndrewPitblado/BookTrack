@@ -16,11 +16,6 @@ const Book = sequelize.define('Book', {
     type: DataTypes.STRING(255),
     allowNull: false,
   },
-  authors: {
-    type: DataTypes.JSON,
-    allowNull: true,
-    defaultValue: [],
-  },
   description: {
     type: DataTypes.TEXT,
     allowNull: true,
@@ -37,7 +32,7 @@ const Book = sequelize.define('Book', {
     type: DataTypes.STRING(20),
     allowNull: true,
   },
-  categories: {
+  genres: {
     type: DataTypes.JSON,
     allowNull: true,
     defaultValue: [],

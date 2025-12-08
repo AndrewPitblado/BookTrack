@@ -8,16 +8,24 @@ const router = express.Router();
 // GET /api/books/search - Search Google Books API
 router.get('/search', auth, async (req, res) => {
   try {
-    const { q, maxResults = 10 } = req.query;
+    const { q, author, maxResults = 10 } = req.query;
 
-    if (!q) {
-      return res.status(400).json({ message: 'Search query is required' });
+    if (!q && !author) {
+      return res.status(400).json({ message: 'Search query or author is required' });
+    }
+
+    // Build search query
+    let searchQuery = '';
+    if (author) {
+      searchQuery = `inauthor:${author}`;
+    } else {
+      searchQuery = q;
     }
 
     const apiKey = process.env.GOOGLE_BOOKS_API_KEY;
-    let url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=${maxResults}`;
+    let url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(searchQuery)}&maxResults=${maxResults}`;
     
-    if (apiKey) {
+    if (apiKey && apiKey !== 'google_books_api_key') {
       url += `&key=${apiKey}`;
     }
 

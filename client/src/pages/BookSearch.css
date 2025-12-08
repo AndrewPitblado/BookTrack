@@ -9,13 +9,13 @@
   margin-bottom: 1.5rem;
 }
 
-.search-form {
+.book-search form {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
 }
 
-.search-form input {
+.book-search form input {
   flex: 1;
   padding: 0.75rem 1rem;
   font-size: 1rem;
@@ -23,12 +23,12 @@
   border-radius: 4px;
 }
 
-.search-form input:focus {
+.book-search form input:focus {
   outline: none;
   border-color: #3498db;
 }
 
-.search-form button {
+.book-search form button {
   padding: 0.75rem 1.5rem;
   background: #3498db;
   color: white;
@@ -36,10 +36,16 @@
   border-radius: 4px;
   cursor: pointer;
   font-size: 1rem;
+  white-space: nowrap;
 }
 
-.search-form button:hover {
+.book-search form button:hover {
   background: #2980b9;
+}
+
+.book-search form button:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
 }
 
 .search-form button:disabled {

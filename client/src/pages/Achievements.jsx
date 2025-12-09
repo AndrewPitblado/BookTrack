@@ -15,10 +15,10 @@ const Achievements = () => {
   useEffect(() => {
     fetchAchievements();
     
-    // Auto-check for new achievements every 10 seconds
+    // Auto-check for new achievements every 5 seconds
     const intervalId = setInterval(() => {
       checkAchievements(true); // Pass true to indicate it's an auto-check
-    }, 10000); // 10 seconds
+    }, 5000); // 5 seconds
     
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);

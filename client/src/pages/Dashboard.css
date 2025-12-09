@@ -233,6 +233,8 @@
   gap: 1rem;
   flex-wrap: wrap;
   margin-top: 1rem;
+  margin-bottom: 2rem;
+  justify-content: center;
 }
 
 .action-btn {

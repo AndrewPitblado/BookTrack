@@ -35,7 +35,7 @@ const Dashboard = () => {
 
         setStats({ reading, finished, achievements, totalPoints });
         setRecentBooks(userBooks.slice(0, 5));
-        setRecentAchievements(userAchievements.slice(0, 3));
+        setRecentAchievements(userAchievements.slice(0, 7));
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {

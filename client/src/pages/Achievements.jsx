@@ -55,7 +55,7 @@ const Achievements = () => {
       bronze: '#cd7f32',
       silver: '#c0c0c0',
       gold: '#ffd700',
-      platinum: '#e5e4e2',
+      platinum: '#87ceeb',
     };
     return colors[tier] || '#999';
   };

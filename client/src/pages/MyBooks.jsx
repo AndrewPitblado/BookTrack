@@ -124,14 +124,36 @@ const MyBooks = () => {
                     </div>
                     <div className="progress-input">
                       <label htmlFor={`page-${userBook.id}`}>Page:</label>
-                      <input
-                        id={`page-${userBook.id}`}
-                        type="number"
-                        min="0"
-                        max={userBook.Book.pageCount}
-                        value={userBook.currentPage || 0}
-                        onChange={(e) => updateProgress(userBook.id, e.target.value)}
-                      />
+                      <div className="page-control">
+                        <button 
+                          className="page-btn page-decrement"
+                          onClick={() => {
+                            const newPage = Math.max(0, (userBook.currentPage || 0) - 1);
+                            updateProgress(userBook.id, newPage);
+                          }}
+                          disabled={(userBook.currentPage || 0) === 0}
+                        >
+                          −
+                        </button>
+                        <input
+                          id={`page-${userBook.id}`}
+                          type="number"
+                          min="0"
+                          max={userBook.Book.pageCount}
+                          value={userBook.currentPage || 0}
+                          onChange={(e) => updateProgress(userBook.id, e.target.value)}
+                        />
+                        <button 
+                          className="page-btn page-increment"
+                          onClick={() => {
+                            const newPage = Math.min(userBook.Book.pageCount, (userBook.currentPage || 0) + 1);
+                            updateProgress(userBook.id, newPage);
+                          }}
+                          disabled={(userBook.currentPage || 0) >= userBook.Book.pageCount}
+                        >
+                          +
+                        </button>
+                      </div>
                       <span>/ {userBook.Book.pageCount}</span>
                     </div>
                   </div>

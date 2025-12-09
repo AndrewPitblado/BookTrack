@@ -44,7 +44,7 @@ router.get('/progress', auth, async (req, res) => {
     const readBooks = await ReadHistory.findAll({
       where: { userId },
       include: [{ model: Book, attributes: ['genres'] }],
-      attributes: ['bookId'],
+      attributes: ['bookId', 'startDate', 'endDate'],
     });
     
     const uniqueGenres = new Set();
@@ -126,6 +126,21 @@ router.get('/progress', auth, async (req, res) => {
           current = totalPages;
           target = criteria.totalPages || 0;
           break;
+        case 'speed_reading':
+          // Check if user has finished any book within the target days
+          const speedReads = readBooks.filter(record => {
+            const history = record; // Already have ReadHistory records
+            if (history.startDate && history.endDate) {
+              const start = new Date(history.startDate);
+              const end = new Date(history.endDate);
+              const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+              return daysDiff <= (criteria.days || 999);
+            }
+            return false;
+          }).length;
+          current = speedReads;
+          target = 1; // At least one speed read
+          break;
         default:
           current = 0;
           target = 1;
@@ -169,7 +184,7 @@ router.post('/check', auth, async (req, res) => {
     const readBooks = await ReadHistory.findAll({
       where: { userId },
       include: [{ model: Book, attributes: ['genres'] }],
-      attributes: ['bookId'],
+      attributes: ['bookId', 'startDate', 'endDate'],
     });
     
     const uniqueGenres = new Set();
@@ -242,6 +257,18 @@ router.post('/check', auth, async (req, res) => {
           break;
         case 'page_count':
           earned = totalPages >= (criteria.totalPages || 0);
+          break;
+        case 'speed_reading':
+          // Check if user has finished any book within the target days
+          earned = readBooks.some(record => {
+            if (record.startDate && record.endDate) {
+              const start = new Date(record.startDate);
+              const end = new Date(record.endDate);
+              const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+              return daysDiff <= (criteria.days || 999);
+            }
+            return false;
+          });
           break;
       }
 

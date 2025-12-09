@@ -7,6 +7,7 @@ const UserBook = require('./UserBook');
 const ReadHistory = require('./ReadHistory');
 const Achievement = require('./Achievement');
 const UserAchievement = require('./UserAchievement');
+const Friendship = require('./Friendship');
 
 // Define associations
 
@@ -43,6 +44,12 @@ UserAchievement.belongsTo(User, { foreignKey: 'userId' });
 Achievement.hasMany(UserAchievement, { foreignKey: 'achievementId', as: 'userAchievements' });
 UserAchievement.belongsTo(Achievement, { foreignKey: 'achievementId' });
 
+// User <-> Friendship (self-referencing many-to-many for friends)
+User.hasMany(Friendship, { foreignKey: 'userId', as: 'sentRequests' });
+User.hasMany(Friendship, { foreignKey: 'friendId', as: 'receivedRequests' });
+Friendship.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+Friendship.belongsTo(User, { foreignKey: 'friendId', as: 'friend' });
+
 module.exports = {
   sequelize,
   User,
@@ -53,4 +60,5 @@ module.exports = {
   ReadHistory,
   Achievement,
   UserAchievement,
+  Friendship,
 };

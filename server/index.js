@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const bookRoutes = require('./routes/books');
 const userBookRoutes = require('./routes/userBooks');
 const achievementRoutes = require('./routes/achievements');
+const friendRoutes = require('./routes/friends');
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/api/user-books', userBookRoutes);
 app.use('/api/achievements', achievementRoutes);
+app.use('/api/friends', friendRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

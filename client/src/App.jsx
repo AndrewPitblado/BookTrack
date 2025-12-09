@@ -8,6 +8,8 @@ import Dashboard from './pages/Dashboard';
 import MyBooks from './pages/MyBooks';
 import BookSearch from './pages/BookSearch';
 import Achievements from './pages/Achievements';
+import Friends from './pages/Friends';
+import FriendProfile from './pages/FriendProfile';
 import './App.css';
 
 function App() {
@@ -49,6 +51,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Achievements />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/friends"
+                element={
+                  <ProtectedRoute>
+                    <Friends />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/friends/:userId"
+                element={
+                  <ProtectedRoute>
+                    <FriendProfile />
                   </ProtectedRoute>
                 }
               />

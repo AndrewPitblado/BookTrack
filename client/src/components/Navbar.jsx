@@ -23,6 +23,7 @@ const Navbar = () => {
           <Link to="/my-books">My Books</Link>
           <Link to="/search">Search</Link>
           <Link to="/achievements">Achievements</Link>
+          <Link to="/friends">Friends</Link>
           <span className="navbar-user">Hi, {user.username}</span>
           <button onClick={handleLogout} className="btn-logout">Logout</button>
         </div>

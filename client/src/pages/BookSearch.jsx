@@ -5,6 +5,7 @@ import './BookSearch.css';
 const BookSearch = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [authorQuery, setAuthorQuery] = useState('');
+  const [genreQuery, setGenreQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [addingId, setAddingId] = useState(null);
@@ -19,6 +20,7 @@ const BookSearch = () => {
       const params = {};
       if (searchQuery) params.q = searchQuery;
       if (authorQuery) params.author = authorQuery;
+      if (genreQuery) params.genre = genreQuery;
       
       const response = await api.get('/books/search', { params });
       setResults(response.data.books || []);
@@ -70,6 +72,12 @@ const BookSearch = () => {
           placeholder="Search by author..."
           value={authorQuery}
           onChange={(e) => setAuthorQuery(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Search by genre..."
+          value={genreQuery}
+          onChange={(e) => setGenreQuery(e.target.value)}
         />
         <button type="submit" disabled={loading}>
           {loading ? 'Searching...' : 'Search'}

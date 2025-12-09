@@ -296,6 +296,8 @@
 .achievement-icon {
   font-size: 3rem;
   display: block;
+  width: auto;
+  height: auto;
 }
 
 .locked-icon {

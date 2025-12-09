@@ -134,7 +134,7 @@ const FriendProfile = () => {
                 <div key={ua.id} className="achievement-item">
                   <div className={`achievement-badge tier-${ua.Achievement?.tier}`}>
                     {ua.Achievement?.icon ? (
-                      <img src={ua.Achievement.icon} alt={ua.Achievement.name} className="achievement-icon" />
+                      <img src={ua.Achievement.icon} alt={ua.Achievement.name} className="achievement-icon-img" />
                     ) : (
                       <span className="achievement-emoji">🏆</span>
                     )}

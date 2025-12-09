@@ -48,7 +48,7 @@ const Achievements = () => {
       if (response.data.newlyUnlocked.length > 0) {
         fetchAchievements(); // Refresh list
         // Only show alert if it's a manual check or if achievements were unlocked
-        if (!isAutoCheck) {
+        if (!isAutoCheck || response.data.newlyUnlocked.length > 0) {
           alert(response.data.message);
         }
       } else {

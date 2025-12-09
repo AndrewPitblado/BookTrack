@@ -108,7 +108,9 @@ router.get('/progress', auth, async (req, res) => {
           target = criteria.count || 0;
           break;
         case 'author_books':
-          current = authorCounts[criteria.authorId] || 0;
+          // Find the author with the most books read
+          const maxAuthorCount = Math.max(...Object.values(authorCounts), 0);
+          current = maxAuthorCount;
           target = criteria.count || 0;
           break;
         case 'genre_diversity':
@@ -244,7 +246,9 @@ router.post('/check', auth, async (req, res) => {
           earned = booksFinished >= (criteria.count || 0);
           break;
         case 'author_books':
-          earned = (authorCounts[criteria.authorId] || 0) >= (criteria.count || 0);
+          // Check if ANY author has reached the target count
+          const maxAuthorCount = Math.max(...Object.values(authorCounts), 0);
+          earned = maxAuthorCount >= (criteria.count || 0);
           break;
         case 'genre_diversity':
           earned = uniqueGenres.size >= (criteria.uniqueGenres || 0);

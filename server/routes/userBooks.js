@@ -23,7 +23,27 @@ router.get('/', auth, async (req, res) => {
       order: [['updatedAt', 'DESC']],
     });
 
-    res.json({ userBooks });
+    // For finished books, fetch their ReadHistory to get rating and notes
+    const userBooksWithHistory = await Promise.all(userBooks.map(async (userBook) => {
+      const bookData = userBook.toJSON();
+      if (userBook.status === 'finished') {
+        const readHistory = await ReadHistory.findOne({
+          where: {
+            userId: req.userId,
+            bookId: userBook.bookId
+          },
+          order: [['endDate', 'DESC']]
+        });
+        if (readHistory) {
+          bookData.rating = readHistory.rating;
+          bookData.notes = readHistory.notes;
+          bookData.readHistoryId = readHistory.id;
+        }
+      }
+      return bookData;
+    }));
+
+    res.json({ userBooks: userBooksWithHistory });
   } catch (error) {
     console.error('Get user books error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -72,7 +92,7 @@ router.post('/', auth, async (req, res) => {
 // PUT /api/user-books/:id - Update book status
 router.put('/:id', auth, async (req, res) => {
   try {
-    const { status, startDate, endDate, currentPage } = req.body;
+    const { status, startDate, endDate, currentPage, rating, notes } = req.body;
 
     const userBook = await UserBook.findOne({
       where: { id: req.params.id, userId: req.userId },
@@ -94,22 +114,56 @@ router.put('/:id', auth, async (req, res) => {
     if (endDate) userBook.endDate = endDate;
     if (currentPage !== undefined) userBook.currentPage = currentPage;
 
-    // If marked as finished, set endDate and create read history
+    // If marked as finished, set endDate and create/update read history
     if (status === 'finished' && previousStatus !== 'finished') {
       userBook.endDate = endDate || new Date();
       
-      // Add to read history
+      // Add to read history with rating and notes
       await ReadHistory.create({
         userId: req.userId,
         bookId: userBook.bookId,
         startDate: userBook.startDate,
         endDate: userBook.endDate,
+        rating: rating || null,
+        notes: notes || null,
       });
+    } else if ((previousStatus === 'finished' || userBook.status === 'finished') && (rating !== undefined || notes !== undefined)) {
+      // If already finished, update the read history with new rating/notes
+      const readHistory = await ReadHistory.findOne({
+        where: {
+          userId: req.userId,
+          bookId: userBook.bookId
+        },
+        order: [['endDate', 'DESC']]
+      });
+      
+      if (readHistory) {
+        if (rating !== undefined) readHistory.rating = rating;
+        if (notes !== undefined) readHistory.notes = notes;
+        await readHistory.save();
+      }
     }
 
     await userBook.save();
 
-    res.json({ userBook, message: 'Book status updated' });
+    // Fetch updated book with rating and notes
+    const userBookData = userBook.toJSON();
+    if (userBook.status === 'finished') {
+      const readHistory = await ReadHistory.findOne({
+        where: {
+          userId: req.userId,
+          bookId: userBook.bookId
+        },
+        order: [['endDate', 'DESC']]
+      });
+      if (readHistory) {
+        userBookData.rating = readHistory.rating;
+        userBookData.notes = readHistory.notes;
+        userBookData.readHistoryId = readHistory.id;
+      }
+    }
+
+    res.json({ userBook: userBookData, message: 'Book status updated' });
   } catch (error) {
     console.error('Update user book error:', error);
     res.status(500).json({ message: 'Server error' });

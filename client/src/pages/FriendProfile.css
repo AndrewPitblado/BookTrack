@@ -173,6 +173,59 @@
   text-overflow: ellipsis;
 }
 
+.book-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.rating-label {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.rating-stars-display {
+  display: flex;
+  gap: 0.1rem;
+}
+
+.star-display {
+  font-size: 1rem;
+  color: #ddd;
+}
+
+.star-display.filled {
+  color: #f39c12;
+}
+
+.book-notes {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.notes-label {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.notes-text {
+  font-size: 0.8rem;
+  color: #555;
+  line-height: 1.4;
+  padding: 0.5rem;
+  background: #fff;
+  border-radius: 4px;
+  border-left: 3px solid #3498db;
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
 .book-progress {
   display: flex;
   align-items: center;

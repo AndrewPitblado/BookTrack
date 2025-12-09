@@ -43,6 +43,18 @@ const MyBooks = () => {
     }
   };
 
+  const updateRatingAndNotes = async (id, rating, notes) => {
+    try {
+      await api.put(`/user-books/${id}`, { rating, notes });
+      // Update local state
+      setUserBooks(userBooks.map(book => 
+        book.id === id ? { ...book, rating, notes } : book
+      ));
+    } catch (error) {
+      console.error('Error updating rating/notes:', error);
+    }
+  };
+
   const removeBook = async (id) => {
     if (!window.confirm('Remove this book from your list?')) return;
     
@@ -155,6 +167,38 @@ const MyBooks = () => {
                         </button>
                       </div>
                       <span>/ {userBook.Book.pageCount}</span>
+                    </div>
+                  </div>
+                )}
+                
+                {userBook.status === 'finished' && (
+                  <div className="rating-section">
+                    <div className="rating-stars">
+                      <label>Rating:</label>
+                      <div className="stars">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <span
+                            key={star}
+                            className={`star ${(userBook.rating || 0) >= star ? 'filled' : ''}`}
+                            onClick={() => updateRatingAndNotes(userBook.id, star, userBook.notes)}
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="notes-section">
+                      <label htmlFor={`notes-${userBook.id}`}>Notes:</label>
+                      <textarea
+                        id={`notes-${userBook.id}`}
+                        placeholder="Add your thoughts about this book..."
+                        value={userBook.notes || ''}
+                        onChange={(e) => setUserBooks(userBooks.map(book => 
+                          book.id === userBook.id ? { ...book, notes: e.target.value } : book
+                        ))}
+                        onBlur={(e) => updateRatingAndNotes(userBook.id, userBook.rating, e.target.value)}
+                        rows="3"
+                      />
                     </div>
                   </div>
                 )}

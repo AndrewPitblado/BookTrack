@@ -300,7 +300,27 @@ router.get('/:userId/books', authMiddleware, async (req, res) => {
       limit: 10
     });
 
-    res.json({ userBooks });
+    // For finished books, fetch their ReadHistory to get rating and notes
+    const userBooksWithHistory = await Promise.all(userBooks.map(async (userBook) => {
+      const bookData = userBook.toJSON();
+      if (userBook.status === 'finished') {
+        const { ReadHistory } = require('../models');
+        const readHistory = await ReadHistory.findOne({
+          where: {
+            userId: userId,
+            bookId: userBook.bookId
+          },
+          order: [['endDate', 'DESC']]
+        });
+        if (readHistory) {
+          bookData.rating = readHistory.rating;
+          bookData.notes = readHistory.notes;
+        }
+      }
+      return bookData;
+    }));
+
+    res.json({ userBooks: userBooksWithHistory });
   } catch (error) {
     console.error('Error fetching friend books:', error);
     res.status(500).json({ message: 'Error fetching friend books' });

@@ -101,6 +101,27 @@ const FriendProfile = () => {
                     <span className="book-author">
                       {userBook.Book?.authors?.map(a => a.name).join(', ') || 'Unknown Author'}
                     </span>
+                    {userBook.status === 'finished' && userBook.rating && (
+                      <div className="book-rating">
+                        <span className="rating-label">Rating:</span>
+                        <div className="rating-stars-display">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <span
+                              key={star}
+                              className={`star-display ${userBook.rating >= star ? 'filled' : ''}`}
+                            >
+                              ★
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {userBook.status === 'finished' && userBook.notes && (
+                      <div className="book-notes">
+                        <span className="notes-label">Notes:</span>
+                        <p className="notes-text">{userBook.notes}</p>
+                      </div>
+                    )}
                     {userBook.status === 'reading' && userBook.Book?.pageCount && userBook.currentPage && (
                       <div className="book-progress">
                         <div className="progress-bar-small">

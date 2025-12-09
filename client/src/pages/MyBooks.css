@@ -238,3 +238,77 @@
 .btn-remove:hover {
   background: #c0392b;
 }
+
+.rating-section {
+  margin-bottom: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #eee;
+}
+
+.rating-stars {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.rating-stars label {
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.stars {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.star {
+  font-size: 1.5rem;
+  color: #ddd;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.star.filled {
+  color: #f39c12;
+}
+
+.star:hover {
+  transform: scale(1.1);
+}
+
+.notes-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.notes-section label {
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.notes-section textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  resize: vertical;
+  background-color: #f9f9f9;
+  color: #2c3e50;
+}
+
+.notes-section textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  background-color: white;
+}
+
+.notes-section textarea::placeholder {
+  color: #999;
+}

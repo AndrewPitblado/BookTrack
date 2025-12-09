@@ -10,7 +10,7 @@ const Achievements = () => {
   const [sortBy, setSortBy] = useState('tier'); // 'tier', 'name', 'points', 'progress'
   const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'unlocked', 'locked'
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 12;
+  const itemsPerPage = 9;
 
   useEffect(() => {
     fetchAchievements();

@@ -48,6 +48,7 @@ const BookSearch = () => {
       });
 
       setMessage(`"${book.title}" added to your library!`);
+      setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       const errMsg = error.response?.data?.message || 'Error adding book';
       setMessage(errMsg);

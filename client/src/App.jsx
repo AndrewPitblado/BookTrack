@@ -76,6 +76,7 @@ function App() {
         </div>
       </Router>
     </AuthProvider>
+    
   )
 }
 

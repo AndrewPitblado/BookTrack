@@ -119,9 +119,74 @@ PORT=5001
 GOOGLE_BOOKS_API_KEY=optional_api_key
 ```
 
+### Client (.env)
+```
+VITE_API_URL=http://localhost:5001/api
+```
+
 **Note:** Generate a strong JWT_SECRET with:
 ```bash
 node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 ```
 
 Each team member needs their own local `.env` file with their MySQL credentials.
+
+## Deploying To Netlify + Railway
+
+### 1. Prepare Hosting Accounts
+- Push this repo to GitHub.
+- Create a Railway project for the backend and MySQL database.
+- Create a Netlify site for the frontend.
+
+### 2. Railway Backend Setup
+- Service source: this repo, root directory `server`.
+- Build command: `npm install`.
+- Start command: `npm start`.
+- Set environment variables in Railway:
+```
+NODE_ENV=production
+PORT=5001
+DB_HOST=<railway_mysql_host>
+DB_PORT=<railway_mysql_port>
+DB_NAME=<railway_mysql_database>
+DB_USER=<railway_mysql_user>
+DB_PASSWORD=<railway_mysql_password>
+JWT_SECRET=<long_random_secret>
+JWT_EXPIRES_IN=7d
+GOOGLE_BOOKS_API_KEY=<optional>
+CORS_ORIGIN=https://booktrack.apitblado.com
+```
+- Verify health endpoint works:
+    - `https://<your-railway-backend-domain>/api/health`
+
+### 3. Netlify Frontend Setup
+- Site source: this repo, base directory `client`.
+- Build command: `npm run build`.
+- Publish directory: `dist`.
+- Set environment variable in Netlify:
+```
+VITE_API_URL=https://api.booktrack.apitblado.com/api
+```
+- Redeploy after saving environment variables.
+
+### 4. Custom Domain Setup (Namecheap)
+- Recommended domains:
+    - Frontend: `booktrack.apitblado.com`
+    - Backend: `api.booktrack.apitblado.com`
+- Add DNS records in Namecheap:
+    - CNAME `booktrack` -> Netlify target host (provided by Netlify)
+    - CNAME `api.booktrack` -> Railway target host (provided by Railway)
+- Add both custom domains in Netlify/Railway dashboards and wait for SSL to provision.
+
+### 5. Seed Data (Optional)
+- In Railway service shell, run:
+```bash
+node seedAchievements.js
+node seedUsers.js
+```
+
+### 6. Production Checklist
+- Confirm login/register works from `booktrack.apitblado.com`.
+- Confirm book search and user-book updates work.
+- Confirm CORS only allows your frontend domain.
+- Confirm `.env` files are not committed.

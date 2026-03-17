@@ -13,7 +13,14 @@ const friendRoutes = require('./routes/friends');
 const app = express();
 
 // Middleware
-app.use(cors());
+const allowedOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(cors({
+  origin: allowedOrigins.length ? allowedOrigins : true,
+}));
 app.use(express.json());
 
 // Routes
@@ -28,10 +35,11 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'BookTrack API is running' });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
+const syncOptions = process.env.NODE_ENV === 'production' ? {} : { alter: true };
 
 // Sync database and start server
-sequelize.sync({ alter: true })
+sequelize.sync(syncOptions)
   .then(() => {
     console.log('Database synced successfully');
     app.listen(PORT, () => {

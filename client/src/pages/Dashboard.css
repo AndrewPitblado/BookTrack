@@ -257,6 +257,7 @@
   background: #2980b9;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  color:azure;
 }
 
 .action-btn.primary {
@@ -268,6 +269,7 @@
 .action-btn.primary:hover {
   background: linear-gradient(135deg, #5568d3 0%, #64408a 100%);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  color:azure;
 }
 
 .action-btn.reading {
@@ -279,6 +281,8 @@
 .action-btn.reading:hover {
   background: linear-gradient(135deg, #e08e0b 0%, #d35400 100%);
   box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+  color:azure;
+
 }
 
 .action-btn.achievements {

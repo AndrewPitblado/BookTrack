@@ -1,8 +1,17 @@
 const express = require('express');
 const { UserBook, Book, ReadHistory, Author } = require('../models');
+const { reconcileUserAchievements } = require('../services/achievementEngine');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
+
+async function reconcileAchievementsForUser(userId) {
+  try {
+    await reconcileUserAchievements(userId);
+  } catch (error) {
+    console.error('Achievement reconciliation error:', error);
+  }
+}
 
 // GET /api/user-books - Get all books for current user
 router.get('/', auth, async (req, res) => {
@@ -114,7 +123,7 @@ router.put('/:id', auth, async (req, res) => {
     if (endDate) userBook.endDate = endDate;
     if (currentPage !== undefined) userBook.currentPage = currentPage;
 
-    // If marked as finished, set endDate and create/update read history
+    // If marked as finished, set endDate and create read history
     if (status === 'finished' && previousStatus !== 'finished') {
       userBook.endDate = endDate || new Date();
       
@@ -126,6 +135,14 @@ router.put('/:id', auth, async (req, res) => {
         endDate: userBook.endDate,
         rating: rating || null,
         notes: notes || null,
+      });
+    } else if (status && status !== 'finished' && previousStatus === 'finished') {
+      // Reverting from finished means the read should no longer count toward achievements.
+      await ReadHistory.destroy({
+        where: {
+          userId: req.userId,
+          bookId: userBook.bookId,
+        },
       });
     } else if ((previousStatus === 'finished' || userBook.status === 'finished') && (rating !== undefined || notes !== undefined)) {
       // If already finished, update the read history with new rating/notes
@@ -145,6 +162,7 @@ router.put('/:id', auth, async (req, res) => {
     }
 
     await userBook.save();
+    await reconcileAchievementsForUser(req.userId);
 
     // Fetch updated book with rating and notes
     const userBookData = userBook.toJSON();
@@ -181,7 +199,15 @@ router.delete('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'Book not found in your list' });
     }
 
+    await ReadHistory.destroy({
+      where: {
+        userId: req.userId,
+        bookId: userBook.bookId,
+      },
+    });
+
     await userBook.destroy();
+    await reconcileAchievementsForUser(req.userId);
 
     res.json({ message: 'Book removed from your list' });
   } catch (error) {

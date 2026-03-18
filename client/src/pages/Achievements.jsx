@@ -15,14 +15,6 @@ const Achievements = () => {
 
   useEffect(() => {
     fetchAchievements();
-    
-    // Auto-check for new achievements every 5 seconds
-    const intervalId = setInterval(() => {
-      checkAchievements(true); // Pass true to indicate it's an auto-check
-    }, 5000); // 5 seconds
-    
-    // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
   }, []);
 
   const fetchAchievements = async () => {
@@ -42,21 +34,18 @@ const Achievements = () => {
     }
   };
 
-  const checkAchievements = async (isAutoCheck = false) => {
+  const checkAchievements = async () => {
     setChecking(true);
     try {
       const response = await api.post('/achievements/check');
-      if (response.data.newlyUnlocked.length > 0) {
-        fetchAchievements(); // Refresh list
-        // Only show alert if it's a manual check or if achievements were unlocked
-        if (!isAutoCheck || response.data.newlyUnlocked.length > 0) {
-          alert(response.data.message);
-        }
+      const unlockedCount = response.data.newlyUnlocked?.length || 0;
+      const revokedCount = response.data.newlyRevoked?.length || 0;
+
+      if (unlockedCount > 0 || revokedCount > 0) {
+        fetchAchievements(); // Refresh list after any achievement changes
+        alert(response.data.message);
       } else {
-        // Only show "no new achievements" message for manual checks
-        if (!isAutoCheck) {
-          alert('No new achievements unlocked yet. Keep reading!');
-        }
+        alert('No achievement changes right now. Keep reading!');
       }
     } catch (error) {
       console.error('Error checking achievements:', error);

@@ -74,6 +74,38 @@ const MyBooks = () => {
     return <div className="loading">Loading...</div>;
   }
 
+
+  const updateStartDate = async (id, startDate) => {
+    try {
+      await api.put(`/user-books/${id}`, { startDate });
+
+      // Optimistic local update
+      setUserBooks((prev) =>
+        prev.map((book) =>
+          book.id === id ? { ...book, startDate } : book
+        )
+      );
+    } catch (error) {
+      console.error('Error updating start date:', error);
+    }
+  };  
+
+  const updateEndDate = async (id, endDate) => {
+    try {
+      await api.put(`/user-books/${id}`, { endDate });
+
+      // Optimistic local update
+      setUserBooks((prev) =>
+        prev.map((book) =>
+          book.id === id ? { ...book, endDate } : book
+        )
+      );
+    } catch (error) {
+      console.error('Error updating end date:', error);
+
+    }
+  }
+
   return (
     <div className="my-books">
       <h1>My Books</h1>
@@ -120,8 +152,13 @@ const MyBooks = () => {
                   {userBook.Book?.authors?.map(a => a.name).join(', ') || 'Unknown Author'}
                 </p>
                 <p className="dates">
-                  Started: {userBook.startDate || 'N/A'}
-                  {userBook.endDate && ` | Ended: ${userBook.endDate}`}
+                  Started: <input type="date" value={userBook.startDate ? userBook.startDate.slice(0, 10) : ''}
+                  onChange={(e) => updateStartDate(userBook.id, e.target.value)} />
+                  
+                </p>
+                <p className='dates'>
+                  Finished: <input type="date" value ={userBook.endDate ? userBook.endDate.slice(0, 10) : ''}
+                  onChange={(e) => updateEndDate(userBook.id, e.target.value)} />
                 </p>
                 
                 {userBook.status === 'reading' && userBook.Book?.pageCount && (

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import { resolveAchievementIcon } from '../utils/achievementIcon';
 import './Achievements.css';
 
 const Achievements = () => {
@@ -194,7 +195,7 @@ const Achievements = () => {
                   <div className="medal-inner">
                     {isUnlocked ? (
                       achievement.icon ? (
-                        <img src={achievement.icon} alt={achievement.name} className="achievement-svg" />
+                        <img src={resolveAchievementIcon(achievement.icon)} alt={achievement.name} className="achievement-svg" />
                       ) : (
                         <span className="achievement-icon">🏆</span>
                       )

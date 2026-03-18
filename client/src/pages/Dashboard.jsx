@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import { resolveAchievementIcon } from '../utils/achievementIcon';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -150,7 +151,7 @@ const Dashboard = () => {
                 <div key={ua.id} className="achievement-item">
                   <div className={`achievement-badge tier-${ua.Achievement?.tier}`}>
                     {ua.Achievement?.icon ? (
-                      <img src={ua.Achievement.icon} alt={ua.Achievement.name} className="achievement-icon-small" />
+                      <img src={resolveAchievementIcon(ua.Achievement.icon)} alt={ua.Achievement.name} className="achievement-icon-small" />
                     ) : (
                       <span className="achievement-emoji">🏆</span>
                     )}

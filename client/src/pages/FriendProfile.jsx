@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
+import { resolveAchievementIcon } from '../utils/achievementIcon';
 import './FriendProfile.css';
 
 const FriendProfile = () => {
@@ -155,7 +156,7 @@ const FriendProfile = () => {
                 <div key={ua.id} className="achievement-item">
                   <div className={`achievement-badge tier-${ua.Achievement?.tier}`}>
                     {ua.Achievement?.icon ? (
-                      <img src={ua.Achievement.icon} alt={ua.Achievement.name} className="achievement-icon-img" />
+                      <img src={resolveAchievementIcon(ua.Achievement.icon)} alt={ua.Achievement.name} className="achievement-icon-img" />
                     ) : (
                       <span className="achievement-emoji">🏆</span>
                     )}

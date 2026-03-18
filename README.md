@@ -155,6 +155,7 @@ JWT_SECRET=<long_random_secret>
 JWT_EXPIRES_IN=7d
 GOOGLE_BOOKS_API_KEY=<optional>
 CORS_ORIGIN=https://booktrack.apitblado.com
+AUTO_SEED_ACHIEVEMENTS=true
 ```
 - Verify health endpoint works:
     - `https://<your-railway-backend-domain>/api/health`
@@ -178,10 +179,11 @@ VITE_API_URL=https://api.booktrack.apitblado.com/api
     - CNAME `api.booktrack` -> Railway target host (provided by Railway)
 - Add both custom domains in Netlify/Railway dashboards and wait for SSL to provision.
 
-### 5. Seed Data (Optional)
-- In Railway service shell, run:
+### 5. Seed Data
+- Achievements now auto-seed on backend startup when `AUTO_SEED_ACHIEVEMENTS` is not set to `false`.
+- To run manually in Railway service shell:
 ```bash
-node seedAchievements.js
+npm run seed:achievements
 node seedUsers.js
 ```
 

@@ -6,11 +6,7 @@ const auth = require('../middleware/auth');
 const router = express.Router();
 
 async function reconcileAchievementsForUser(userId) {
-  try {
-    await reconcileUserAchievements(userId);
-  } catch (error) {
-    console.error('Achievement reconciliation error:', error);
-  }
+  await reconcileUserAchievements(userId);
 }
 
 // GET /api/user-books - Get all books for current user

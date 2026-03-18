@@ -19,6 +19,8 @@ router.get('/', auth, async (req, res) => {
 // GET /api/achievements/user - Get user's unlocked achievements
 router.get('/user', auth, async (req, res) => {
   try {
+    await reconcileUserAchievements(req.userId);
+
     const userAchievements = await UserAchievement.findAll({
       where: { userId: req.userId },
       include: [{ model: Achievement }],
@@ -35,6 +37,8 @@ router.get('/user', auth, async (req, res) => {
 // GET /api/achievements/progress - Get progress for all achievements
 router.get('/progress', auth, async (req, res) => {
   try {
+    await reconcileUserAchievements(req.userId);
+
     const progress = await getAchievementProgress(req.userId);
 
     res.json({ progress });

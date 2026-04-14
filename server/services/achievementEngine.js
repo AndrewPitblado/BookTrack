@@ -1,4 +1,10 @@
-const { Achievement, UserAchievement, ReadHistory, Book, sequelize } = require('../models');
+const {
+  Achievement,
+  UserAchievement,
+  UserBook,
+  Book,
+  sequelize,
+} = require("../models");
 
 function evaluateAchievement(achievement, stats) {
   const criteria = achievement.criteria || {};
@@ -7,34 +13,34 @@ function evaluateAchievement(achievement, stats) {
   let earned = false;
 
   switch (criteria.type) {
-    case 'books_finished':
+    case "books_finished":
       current = stats.booksFinished;
       target = criteria.count || 0;
       earned = current >= target;
       break;
-    case 'author_books': {
+    case "author_books": {
       const maxAuthorCount = Math.max(...Object.values(stats.authorCounts), 0);
       current = maxAuthorCount;
       target = criteria.count || 0;
       earned = current >= target;
       break;
     }
-    case 'genre_diversity':
+    case "genre_diversity":
       current = stats.uniqueGenres.size;
       target = criteria.uniqueGenres || 0;
       earned = current >= target;
       break;
-    case 'genre_master':
+    case "genre_master":
       current = stats.genreCounts[criteria.genre] || 0;
       target = criteria.count || 0;
       earned = current >= target;
       break;
-    case 'page_count':
+    case "page_count":
       current = Number(stats.totalPages || 0);
       target = criteria.totalPages || 0;
       earned = current >= target;
       break;
-    case 'speed_reading':
+    case "speed_reading":
       current = stats.readBooks.filter((record) => {
         if (record.startDate && record.endDate) {
           const start = new Date(record.startDate);
@@ -67,14 +73,23 @@ function evaluateAchievement(achievement, stats) {
 }
 
 async function getUserStats(userId, transaction) {
-  const booksFinished = await ReadHistory.count({ where: { userId }, transaction });
-
-  const readBooks = await ReadHistory.findAll({
-    where: { userId },
-    include: [{ model: Book, attributes: ['genres'] }],
-    attributes: ['bookId', 'startDate', 'endDate'],
+  const finishedUserBooks = await UserBook.findAll({
+    where: { userId, status: "finished" },
+    include: [{ model: Book, attributes: ["id", "genres", "pageCount"] }],
+    attributes: ["bookId", "startDate", "endDate"],
     transaction,
   });
+
+  // Defensive de-duplication by bookId in case legacy data contains duplicates.
+  const finishedBooksById = new Map();
+  finishedUserBooks.forEach((record) => {
+    if (!finishedBooksById.has(record.bookId)) {
+      finishedBooksById.set(record.bookId, record);
+    }
+  });
+
+  const readBooks = Array.from(finishedBooksById.values());
+  const booksFinished = readBooks.length;
 
   const uniqueGenres = new Set();
   const genreCounts = {};
@@ -89,18 +104,18 @@ async function getUserStats(userId, transaction) {
 
   const authorBooks = await sequelize.query(
     `
-      SELECT a.id, COUNT(DISTINCT rh.bookId) as count
-      FROM read_history rh
-      JOIN book_authors ba ON rh.bookId = ba.bookId
+      SELECT a.id, COUNT(DISTINCT ub.bookId) as count
+      FROM user_books ub
+      JOIN book_authors ba ON ub.bookId = ba.bookId
       JOIN authors a ON ba.authorId = a.id
-      WHERE rh.userId = :userId
+      WHERE ub.userId = :userId AND ub.status = 'finished'
       GROUP BY a.id
     `,
     {
       replacements: { userId },
       type: sequelize.QueryTypes.SELECT,
       transaction,
-    }
+    },
   );
 
   const authorCounts = {};
@@ -108,21 +123,10 @@ async function getUserStats(userId, transaction) {
     authorCounts[row.id] = parseInt(row.count, 10);
   });
 
-  const totalPagesResult = await sequelize.query(
-    `
-      SELECT SUM(b.pageCount) as totalPages
-      FROM read_history rh
-      JOIN books b ON rh.bookId = b.id
-      WHERE rh.userId = :userId AND b.pageCount IS NOT NULL
-    `,
-    {
-      replacements: { userId },
-      type: sequelize.QueryTypes.SELECT,
-      transaction,
-    }
-  );
-
-  const totalPages = Number(totalPagesResult[0]?.totalPages || 0);
+  const totalPages = readBooks.reduce((sum, record) => {
+    const pageCount = Number(record.Book?.pageCount || 0);
+    return sum + (Number.isFinite(pageCount) ? pageCount : 0);
+  }, 0);
 
   return {
     booksFinished,
@@ -150,7 +154,9 @@ async function getEarnedAchievements(userId, transaction) {
   });
 
   const earnedAchievementIds = new Set(
-    evaluated.filter((entry) => entry.earned).map((entry) => entry.achievement.id)
+    evaluated
+      .filter((entry) => entry.earned)
+      .map((entry) => entry.achievement.id),
   );
 
   return { stats, achievements, evaluated, earnedAchievementIds };
@@ -161,11 +167,15 @@ async function getAchievementProgress(userId) {
 
   const unlockedAchievements = await UserAchievement.findAll({
     where: { userId },
-    attributes: ['achievementId'],
+    attributes: ["achievementId"],
   });
 
-  const unlockedIds = new Set(unlockedAchievements.map((ua) => ua.achievementId));
-  const progressById = new Map(evaluated.map((entry) => [entry.achievement.id, entry.progress]));
+  const unlockedIds = new Set(
+    unlockedAchievements.map((ua) => ua.achievementId),
+  );
+  const progressById = new Map(
+    evaluated.map((entry) => [entry.achievement.id, entry.progress]),
+  );
 
   return achievements.map((achievement) => ({
     achievementId: achievement.id,
@@ -181,7 +191,10 @@ async function getAchievementProgress(userId) {
 }
 
 async function getReconciliationPlan(userId, transaction) {
-  const { achievements, earnedAchievementIds } = await getEarnedAchievements(userId, transaction);
+  const { achievements, earnedAchievementIds } = await getEarnedAchievements(
+    userId,
+    transaction,
+  );
 
   const existingRows = await UserAchievement.findAll({
     where: { userId },
@@ -191,14 +204,18 @@ async function getReconciliationPlan(userId, transaction) {
   const existingIds = new Set(existingRows.map((row) => row.achievementId));
 
   const newlyEarned = achievements.filter(
-    (achievement) => earnedAchievementIds.has(achievement.id) && !existingIds.has(achievement.id)
+    (achievement) =>
+      earnedAchievementIds.has(achievement.id) &&
+      !existingIds.has(achievement.id),
   );
 
   const newlyRevokedRows = existingRows.filter(
-    (row) => !earnedAchievementIds.has(row.achievementId)
+    (row) => !earnedAchievementIds.has(row.achievementId),
   );
 
-  const achievementById = new Map(achievements.map((achievement) => [achievement.id, achievement]));
+  const achievementById = new Map(
+    achievements.map((achievement) => [achievement.id, achievement]),
+  );
 
   return {
     newlyEarned,
@@ -207,21 +224,26 @@ async function getReconciliationPlan(userId, transaction) {
   };
 }
 
-async function reconcileUserAchievements(userId, transactionOrOptions, maybeOptions) {
+async function reconcileUserAchievements(
+  userId,
+  transactionOrOptions,
+  maybeOptions,
+) {
   const transaction =
-    transactionOrOptions && typeof transactionOrOptions.commit === 'function'
+    transactionOrOptions && typeof transactionOrOptions.commit === "function"
       ? transactionOrOptions
       : undefined;
   const options =
     transaction && maybeOptions
       ? maybeOptions
       : transactionOrOptions && !transaction
-      ? transactionOrOptions
-      : {};
+        ? transactionOrOptions
+        : {};
 
   const dryRun = Boolean(options?.dryRun);
 
-  const { newlyEarned, newlyRevokedRows, achievementById } = await getReconciliationPlan(userId, transaction);
+  const { newlyEarned, newlyRevokedRows, achievementById } =
+    await getReconciliationPlan(userId, transaction);
 
   if (!dryRun && newlyEarned.length > 0) {
     await UserAchievement.bulkCreate(
@@ -229,7 +251,7 @@ async function reconcileUserAchievements(userId, transactionOrOptions, maybeOpti
         userId,
         achievementId: achievement.id,
       })),
-      { transaction }
+      { transaction },
     );
   }
 

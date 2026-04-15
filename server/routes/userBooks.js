@@ -5,6 +5,24 @@ const auth = require("../middleware/auth");
 
 const router = express.Router();
 
+function normalizeHalfStepRating(rating) {
+  if (rating === undefined || rating === null || rating === "") {
+    return null;
+  }
+
+  const numeric = Number(rating);
+  if (!Number.isFinite(numeric)) {
+    throw new Error("Rating must be a valid number");
+  }
+
+  if (numeric < 0.5 || numeric > 5) {
+    throw new Error("Rating must be between 0.5 and 5");
+  }
+
+  const normalized = Math.round(numeric * 2) / 2;
+  return Number(normalized.toFixed(1));
+}
+
 async function reconcileAchievementsForUser(userId) {
   await reconcileUserAchievements(userId);
 }
@@ -45,7 +63,7 @@ router.get("/", auth, async (req, res) => {
             order: [["endDate", "DESC"]],
           });
           if (readHistory) {
-            bookData.rating = readHistory.rating;
+            bookData.rating = Number(readHistory.rating);
             bookData.notes = readHistory.notes;
             bookData.readHistoryId = readHistory.id;
           }
@@ -73,6 +91,13 @@ router.post("/", auth, async (req, res) => {
       rating,
       notes,
     } = req.body;
+
+    let normalizedRating = null;
+    try {
+      normalizedRating = normalizeHalfStepRating(rating);
+    } catch (validationError) {
+      return res.status(400).json({ message: validationError.message });
+    }
 
     if (!bookId) {
       return res.status(400).json({ message: "Book ID is required" });
@@ -102,7 +127,7 @@ router.post("/", auth, async (req, res) => {
         bookId: userBook.bookId,
         startDate: userBook.startDate,
         endDate: userBook.endDate,
-        rating: rating || null,
+        rating: normalizedRating,
         notes: notes || null,
       });
     }
@@ -131,7 +156,7 @@ router.post("/", auth, async (req, res) => {
       });
 
       if (readHistory) {
-        userBookResponse.rating = readHistory.rating;
+        userBookResponse.rating = Number(readHistory.rating);
         userBookResponse.notes = readHistory.notes;
         userBookResponse.readHistoryId = readHistory.id;
       }
@@ -148,6 +173,13 @@ router.post("/", auth, async (req, res) => {
 router.put("/:id", auth, async (req, res) => {
   try {
     const { status, startDate, endDate, currentPage, rating, notes } = req.body;
+
+    let normalizedRating;
+    try {
+      normalizedRating = normalizeHalfStepRating(rating);
+    } catch (validationError) {
+      return res.status(400).json({ message: validationError.message });
+    }
 
     const userBook = await UserBook.findOne({
       where: { id: req.params.id, userId: req.userId },
@@ -183,7 +215,7 @@ router.put("/:id", auth, async (req, res) => {
         bookId: userBook.bookId,
         startDate: userBook.startDate,
         endDate: userBook.endDate,
-        rating: rating || null,
+        rating: normalizedRating,
         notes: notes || null,
       });
     } else if (
@@ -212,7 +244,7 @@ router.put("/:id", auth, async (req, res) => {
       });
 
       if (readHistory) {
-        if (rating !== undefined) readHistory.rating = rating;
+        if (rating !== undefined) readHistory.rating = normalizedRating;
         if (notes !== undefined) readHistory.notes = notes;
         await readHistory.save();
       }
@@ -232,7 +264,7 @@ router.put("/:id", auth, async (req, res) => {
         order: [["endDate", "DESC"]],
       });
       if (readHistory) {
-        userBookData.rating = readHistory.rating;
+        userBookData.rating = Number(readHistory.rating);
         userBookData.notes = readHistory.notes;
         userBookData.readHistoryId = readHistory.id;
       }

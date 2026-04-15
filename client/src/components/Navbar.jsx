@@ -1,38 +1,79 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import './Navbar.css';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import "./Navbar.css";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    closeMenu();
+    navigate("/login");
   };
 
   return (
     <nav className="navbar">
-      <div className="navbar-brand">
-        <Link to="/">📚 BookTrack</Link>
+      <div className="navbar-top">
+        <div className="navbar-brand">
+          <Link to="/" onClick={closeMenu}>
+            📚 BookTrack
+          </Link>
+        </div>
+
+        <button
+          type="button"
+          className={`navbar-toggle ${isMenuOpen ? "is-open" : ""}`}
+          onClick={() => setIsMenuOpen((open) => !open)}
+          aria-expanded={isMenuOpen}
+          aria-controls="navbar-menu"
+        >
+          {isMenuOpen ? "Hide" : "Menu"}
+        </button>
       </div>
-      
-      {user ? (
-        <div className="navbar-menu">
-          <Link to="/dashboard">Dashboard</Link>
-          <Link to="/my-books">My Books</Link>
-          <Link to="/search">Search</Link>
-          <Link to="/achievements">Achievements</Link>
-          <Link to="/friends">Friends</Link>
-          <span className="navbar-user">Hi, {user.username}</span>
-          <button onClick={handleLogout} className="btn-logout">Logout</button>
-        </div>
-      ) : (
-        <div className="navbar-menu">
-          <Link to="/login">Login</Link>
-          <Link to="/register">Register</Link>
-        </div>
-      )}
+
+      <div
+        id="navbar-menu"
+        className={`navbar-menu ${isMenuOpen ? "is-open" : ""}`}
+      >
+        {user ? (
+          <>
+            <Link to="/dashboard" onClick={closeMenu}>
+              Dashboard
+            </Link>
+            <Link to="/my-books" onClick={closeMenu}>
+              My Books
+            </Link>
+            <Link to="/search" onClick={closeMenu}>
+              Search
+            </Link>
+            <Link to="/achievements" onClick={closeMenu}>
+              Achievements
+            </Link>
+            <Link to="/friends" onClick={closeMenu}>
+              Friends
+            </Link>
+            <button onClick={handleLogout} className="btn-logout">
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <Link to="/login" onClick={closeMenu}>
+              Login
+            </Link>
+            <Link to="/register" onClick={closeMenu}>
+              Register
+            </Link>
+          </>
+        )}
+      </div>
     </nav>
   );
 };

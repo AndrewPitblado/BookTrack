@@ -191,6 +191,12 @@
   gap: 0.1rem;
 }
 
+.rating-not-rated {
+  color: #666;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
 .star-display {
   position: relative;
   width: 1rem;

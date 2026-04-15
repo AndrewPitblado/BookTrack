@@ -109,29 +109,40 @@ const FriendProfile = () => {
                       {userBook.Book?.authors?.map((a) => a.name).join(", ") ||
                         "Unknown Author"}
                     </span>
-                    {userBook.status === "finished" && userBook.rating && (
+                    {userBook.status === "finished" && (
                       <div className="book-rating">
                         <span className="rating-label">Rating:</span>
-                        <div className="rating-stars-display">
-                          {[1, 2, 3, 4, 5].map((star) => {
-                            const fillPercent =
-                              Math.max(
-                                0,
-                                Math.min(
-                                  1,
-                                  (userBook.rating || 0) - (star - 1),
-                                ),
-                              ) * 100;
+                        {(() => {
+                          const numericRating = Number(userBook.rating);
+                          const isRated = Number.isFinite(numericRating) && numericRating > 0;
 
-                            return (
-                              <span
-                                key={star}
-                                className="star-display"
-                                style={{ "--fill-percent": `${fillPercent}%` }}
-                              />
-                            );
-                          })}
-                        </div>
+                          if (!isRated) {
+                            return <span className="rating-not-rated">Not Rated</span>;
+                          }
+
+                          return (
+                            <div className="rating-stars-display">
+                              {[1, 2, 3, 4, 5].map((star) => {
+                                const fillPercent =
+                                  Math.max(
+                                    0,
+                                    Math.min(
+                                      1,
+                                      numericRating - (star - 1),
+                                    ),
+                                  ) * 100;
+
+                                return (
+                                  <span
+                                    key={star}
+                                    className="star-display"
+                                    style={{ "--fill-percent": `${fillPercent}%` }}
+                                  />
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
                     {userBook.status === "finished" && userBook.notes && (

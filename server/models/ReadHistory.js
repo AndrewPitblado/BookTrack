@@ -29,13 +29,14 @@ const ReadHistory = sequelize.define(
       type: DataTypes.DECIMAL(2, 1),
       allowNull: true,
       validate: {
-        min: 0.5,
-        max: 5,
         isHalfStep(value) {
           if (value === null || value === undefined) return;
           const numeric = Number(value);
           if (!Number.isFinite(numeric)) {
             throw new Error("Rating must be a number");
+          }
+          if (numeric < 0.5 || numeric > 5) {
+            throw new Error("Rating must be between 0.5 and 5");
           }
           if (!Number.isInteger(numeric * 2)) {
             throw new Error("Rating must be in 0.5 increments");

@@ -67,7 +67,7 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard">
-      <h1>Welcome back, {user?.username}! 🤓📕</h1>
+      <h1>Welcome back, {user?.username}! 📖</h1>
 
       <div className="stats-grid">
         <div className="stat-card stat-reading">

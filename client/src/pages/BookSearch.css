@@ -153,6 +153,10 @@
   font-size: 0.85rem;
   font-weight: 600;
 }
+.description-toggle:focus {
+  outline: none;
+  background: none;
+}
 
 .description-toggle:hover {
   color: #1f6693;

@@ -1,32 +1,36 @@
-import { useState } from 'react';
-import api from '../services/api';
-import './BookSearch.css';
+import { useState } from "react";
+import api from "../services/api";
+import "./BookSearch.css";
 
 const BookSearch = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [authorQuery, setAuthorQuery] = useState('');
-  const [genreQuery, setGenreQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [authorQuery, setAuthorQuery] = useState("");
+  const [genreQuery, setGenreQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [addingId, setAddingId] = useState(null);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
+
+  const DESCRIPTION_PREVIEW_LENGTH = 260;
 
   const handleSearch = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
+    setMessage("");
 
     try {
       const params = {};
       if (searchQuery) params.q = searchQuery;
       if (authorQuery) params.author = authorQuery;
       if (genreQuery) params.genre = genreQuery;
-      
-      const response = await api.get('/books/search', { params });
+
+      const response = await api.get("/books/search", { params });
       setResults(response.data.books || []);
+      setExpandedDescriptions({});
     } catch (err) {
-      console.error('Search error:', err);
-      setMessage('Failed to search books');
+      console.error("Search error:", err);
+      setMessage("Failed to search books");
     } finally {
       setLoading(false);
     }
@@ -34,27 +38,34 @@ const BookSearch = () => {
 
   const addToLibrary = async (book) => {
     setAddingId(book.googleBooksId);
-    setMessage('');
+    setMessage("");
 
     try {
       // First, add or find the book in our database
-      const bookResponse = await api.post('/books', book);
+      const bookResponse = await api.post("/books", book);
       const savedBook = bookResponse.data.book;
 
       // Then add to user's list
-      await api.post('/user-books', {
+      await api.post("/user-books", {
         bookId: savedBook.id,
-        status: 'reading',
+        status: "reading",
       });
 
       setMessage(`"${book.title}" added to your library!`);
-      setTimeout(() => setMessage(''), 3000);
+      setTimeout(() => setMessage(""), 3000);
     } catch (error) {
-      const errMsg = error.response?.data?.message || 'Error adding book';
+      const errMsg = error.response?.data?.message || "Error adding book";
       setMessage(errMsg);
     } finally {
       setAddingId(null);
     }
+  };
+
+  const toggleDescription = (googleBooksId) => {
+    setExpandedDescriptions((prev) => ({
+      ...prev,
+      [googleBooksId]: !prev[googleBooksId],
+    }));
   };
 
   return (
@@ -81,7 +92,7 @@ const BookSearch = () => {
           onChange={(e) => setGenreQuery(e.target.value)}
         />
         <button type="submit" disabled={loading}>
-          {loading ? 'Searching...' : 'Search'}
+          {loading ? "Searching..." : "Search"}
         </button>
       </form>
 
@@ -90,31 +101,60 @@ const BookSearch = () => {
       <div className="search-results">
         {results.map((book) => (
           <div key={book.googleBooksId} className="result-card">
-            {book.thumbnail && (
-              <img src={book.thumbnail} alt={book.title} />
-            )}
+            {book.thumbnail && <img src={book.thumbnail} alt={book.title} />}
             <div className="result-info">
               <h3>{book.title}</h3>
-              <p className="authors">{book.authors?.join(', ') || 'Unknown Author'}</p>
-              {book.pageCount && <p className="pages">{book.pageCount} pages</p>}
-              <p className="description">
-                {book.description?.substring(0, 150)}
-                {book.description?.length > 150 && '...'}
+              <p className="authors">
+                {book.authors?.join(", ") || "Unknown Author"}
               </p>
-              <button 
+              {book.pageCount && (
+                <p className="pages">{book.pageCount} pages</p>
+              )}
+              <button
                 onClick={() => addToLibrary(book)}
                 disabled={addingId === book.googleBooksId}
                 className="btn-add"
               >
-                {addingId === book.googleBooksId ? 'Adding...' : 'Add to Library'}
+                {addingId === book.googleBooksId
+                  ? "Adding..."
+                  : "Add to Library"}
               </button>
+              {book.description && (
+                <>
+                  <p className="description">
+                    {expandedDescriptions[book.googleBooksId]
+                      ? book.description
+                      : `${book.description.substring(
+                          0,
+                          DESCRIPTION_PREVIEW_LENGTH,
+                        )}${
+                          book.description.length > DESCRIPTION_PREVIEW_LENGTH
+                            ? "..."
+                            : ""
+                        }`}
+                  </p>
+                  {book.description.length > DESCRIPTION_PREVIEW_LENGTH && (
+                    <button
+                      type="button"
+                      className="description-toggle"
+                      onClick={() => toggleDescription(book.googleBooksId)}
+                    >
+                      {expandedDescriptions[book.googleBooksId]
+                        ? "Show less"
+                        : "Read more"}
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           </div>
         ))}
       </div>
 
       {results.length === 0 && !loading && (searchQuery || authorQuery) && (
-        <p className="no-results">No books found. Try a different search term.</p>
+        <p className="no-results">
+          No books found. Try a different search term.
+        </p>
       )}
     </div>
   );

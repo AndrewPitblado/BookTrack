@@ -239,7 +239,8 @@
 
 .action-btn {
   flex: 1;
-  min-width: 200px;
+  min-width: 250px;
+  max-width: fit-content;
   padding: 1rem 1.5rem;
   background: #3498db;
   color: white;

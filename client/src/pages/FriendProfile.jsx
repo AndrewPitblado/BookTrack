@@ -151,7 +151,7 @@ const FriendProfile = () => {
                     )}
                     {userBook.status === "finished" && userBook.notes && (
                       <div className="book-notes">
-                        <span className="notes-label">Notes:</span>
+                        <span className="notes-label">Review:</span>
                         <p className="notes-text">{userBook.notes}</p>
                       </div>
                     )}

@@ -62,7 +62,7 @@ const Dashboard = () => {
   }
 
   const readingBook = recentBooks.find((b) => b.status === "reading");
-  const featuredFriend = friends[0];
+  const featuredFriend = friends.slice(0, 3); //Show first three friends if we have them, otherwise just one or none
   const friendCount = friends.length;
 
   return (
@@ -130,31 +130,51 @@ const Dashboard = () => {
               </Link>
             )}
 
-            {friendCount === 1 && featuredFriend && (
-              <Link to={`/friends/${featuredFriend.id}`} className="action-btn">
+            {friendCount === 1 && featuredFriend[0] && (
+              <Link
+                to={`/friends/${featuredFriend[0].id}`}
+                className="action-btn"
+              >
                 <span className="action-btn-label">
                   <span aria-hidden="true">👤</span>
-                  <span>View {featuredFriend.username}'s Profile</span>
+                  <span>View {featuredFriend[0].username}'s Profile</span>
                 </span>
               </Link>
             )}
 
             {friendCount > 1 && (
               <>
-                <Link to="/friends" className="action-btn">
-                  <span className="action-btn-label">
-                    <span aria-hidden="true">👥</span>
-                    <span>View Friends ({friendCount})</span>
-                  </span>
-                </Link>
-                {featuredFriend && (
+                {/* If there are multiple featured friends show the top 3 */}
+                {featuredFriend[0] && (
                   <Link
-                    to={`/friends/${featuredFriend.id}`}
+                    to={`/friends/${featuredFriend[0].id}`}
                     className="action-btn"
                   >
                     <span className="action-btn-label">
                       <span aria-hidden="true">👤</span>
-                      <span>Visit {featuredFriend.username}'s Profile</span>
+                      <span>Visit {featuredFriend[0].username}'s Profile</span>
+                    </span>
+                  </Link>
+                )}
+                {featuredFriend[1] && (
+                  <Link
+                    to={`/friends/${featuredFriend[1].id}`}
+                    className="action-btn"
+                  >
+                    <span className="action-btn-label">
+                      <span aria-hidden="true">👤</span>
+                      <span>Visit {featuredFriend[1].username}'s Profile</span>
+                    </span>
+                  </Link>
+                )}
+                {featuredFriend[2] && (
+                  <Link
+                    to={`/friends/${featuredFriend[2].id}`}
+                    className="action-btn"
+                  >
+                    <span className="action-btn-label">
+                      <span aria-hidden="true">👤</span>
+                      <span>Visit {featuredFriend[2].username}'s Profile</span>
                     </span>
                   </Link>
                 )}

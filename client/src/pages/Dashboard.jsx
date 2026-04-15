@@ -91,45 +91,71 @@ const Dashboard = () => {
       <div className="quick-actions">
         {recentBooks.length === 0 ? (
           <Link to="/search" className="action-btn primary">
-            📚 Add Your First Book
+            <span className="action-btn-label">
+              <span aria-hidden="true">📚</span>
+              <span>Add Your First Book</span>
+            </span>
           </Link>
         ) : (
           <>
             {stats.reading > 0 && readingBook && (
               <Link to="/my-books" className="action-btn reading">
-                📖 Continue Reading: {readingBook?.Book?.title || "Your Book"}
+                <span className="action-btn-label">
+                  <span aria-hidden="true">📖</span>
+                  <span>
+                    Continue Reading: {readingBook?.Book?.title || "Your Book"}
+                  </span>
+                </span>
               </Link>
             )}
             <Link to="/search" className="action-btn">
-              🔍 Discover More Books
+              <span className="action-btn-label">
+                <span aria-hidden="true">🔍</span>
+                <span>Discover More Books</span>
+              </span>
             </Link>
             <Link to="/achievements" className="action-btn achievements">
-              🎯 View All Achievements
+              <span className="action-btn-label">
+                <span aria-hidden="true">🎯</span>
+                <span>View All Achievements</span>
+              </span>
             </Link>
 
             {friendCount === 0 && (
               <Link to="/friends" className="action-btn">
-                👥 Find Friends
+                <span className="action-btn-label">
+                  <span aria-hidden="true">👥</span>
+                  <span>Find Friends</span>
+                </span>
               </Link>
             )}
 
             {friendCount === 1 && featuredFriend && (
               <Link to={`/friends/${featuredFriend.id}`} className="action-btn">
-                👤 View {featuredFriend.username}'s Profile
+                <span className="action-btn-label">
+                  <span aria-hidden="true">👤</span>
+                  <span>View {featuredFriend.username}'s Profile</span>
+                </span>
               </Link>
             )}
 
             {friendCount > 1 && (
               <>
                 <Link to="/friends" className="action-btn">
-                  👥 View Friends ({friendCount})
+                  <span className="action-btn-label">
+                    <span aria-hidden="true">👥</span>
+                    <span>View Friends ({friendCount})</span>
+                  </span>
                 </Link>
                 {featuredFriend && (
                   <Link
                     to={`/friends/${featuredFriend.id}`}
                     className="action-btn"
                   >
-                    👤 Visit {featuredFriend.username}'s Profile
+                    <span className="action-btn-label">
+                      <span aria-hidden="true">👤</span>
+                      <span>Visit {featuredFriend.username}'s Profile</span>
+                    </span>
                   </Link>
                 )}
               </>

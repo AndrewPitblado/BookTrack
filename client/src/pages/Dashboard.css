@@ -102,7 +102,7 @@
     flex-direction: row;
     gap: 1.5rem;
   }
-  
+
   .recent-sections > .dashboard-section {
     flex: 1;
     min-width: 0;
@@ -253,11 +253,24 @@
   text-overflow: ellipsis;
 }
 
+.action-btn-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  transform: translateY(0);
+  transition: transform 0.2s;
+}
+
 .action-btn:hover {
   background: #2980b9;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
-  color:azure;
+  color: azure;
+}
+
+.action-btn:hover .action-btn-label {
+  transform: translateY(-2px);
 }
 
 .action-btn.primary {
@@ -269,7 +282,7 @@
 .action-btn.primary:hover {
   background: linear-gradient(135deg, #5568d3 0%, #64408a 100%);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-  color:azure;
+  color: azure;
 }
 
 .action-btn.reading {
@@ -281,8 +294,7 @@
 .action-btn.reading:hover {
   background: linear-gradient(135deg, #e08e0b 0%, #d35400 100%);
   box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
-  color:azure;
-
+  color: azure;
 }
 
 .action-btn.achievements {
@@ -299,7 +311,7 @@
     min-width: 100%;
     white-space: normal;
   }
-  
+
   .action-btn.reading {
     flex: 1;
   }

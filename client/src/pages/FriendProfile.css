@@ -192,12 +192,35 @@
 }
 
 .star-display {
+  position: relative;
+  width: 1rem;
+  height: 1rem;
+  display: inline-block;
+  line-height: 1;
+}
+
+.star-display::before,
+.star-display::after {
+  content: "★";
+  position: absolute;
+  top: 0;
+  left: 0;
   font-size: 1rem;
+  line-height: 1rem;
+  user-select: none;
+  pointer-events: none;
+}
+
+.star-display::before {
   color: #ddd;
 }
 
-.star-display.filled {
+.star-display::after {
   color: #f39c12;
+  width: var(--fill-percent, 0%);
+  height: 100%;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .book-notes {

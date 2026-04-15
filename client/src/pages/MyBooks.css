@@ -195,7 +195,7 @@
   margin: 0;
 }
 
-.progress-input input[type=number] {
+.progress-input input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
@@ -222,7 +222,7 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   background-color: #e0e0e0;
-  color:#2c3e50
+  color: #2c3e50;
 }
 
 .btn-remove {
@@ -260,23 +260,62 @@
 
 .stars {
   display: flex;
-  gap: 0.2rem;
+  gap: 0.1rem;
 }
 
-.star {
-  font-size: 1.5rem;
-  color: #ddd;
+.star-button {
+  position: relative;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  padding: 0;
+  background: transparent;
   cursor: pointer;
-  transition: all 0.2s;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.star-empty,
+.star-filled {
+  font-size: 1.5rem;
   user-select: none;
+  transition: transform 0.12s ease;
 }
 
-.star.filled {
+.star-empty {
+  color: #ddd;
+}
+
+.star-filled {
+  position: absolute;
+  left: 0;
+  top: 0;
   color: #f39c12;
+  width: var(--fill-percent, 0%);
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    width 0.08s linear,
+    transform 0.12s ease;
 }
 
-.star:hover {
-  transform: scale(1.1);
+.star-button:hover .star-empty,
+.star-button:hover .star-filled,
+.star-button:focus-visible .star-empty,
+.star-button:focus-visible .star-filled {
+  transform: scale(1.08);
+}
+
+.star-button:focus-visible {
+  outline: 2px solid #3498db;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.star-button:hover .star-filled {
+  color: #f39c12;
 }
 
 .notes-section {

@@ -114,10 +114,15 @@ const FriendProfile = () => {
                         <span className="rating-label">Rating:</span>
                         {(() => {
                           const numericRating = Number(userBook.rating);
-                          const isRated = Number.isFinite(numericRating) && numericRating > 0;
+                          const isRated =
+                            Number.isFinite(numericRating) && numericRating > 0;
 
                           if (!isRated) {
-                            return <span className="rating-not-rated">Not Rated</span>;
+                            return (
+                              <span className="rating-not-rated">
+                                Not Rated
+                              </span>
+                            );
                           }
 
                           return (
@@ -126,17 +131,16 @@ const FriendProfile = () => {
                                 const fillPercent =
                                   Math.max(
                                     0,
-                                    Math.min(
-                                      1,
-                                      numericRating - (star - 1),
-                                    ),
+                                    Math.min(1, numericRating - (star - 1)),
                                   ) * 100;
 
                                 return (
                                   <span
                                     key={star}
                                     className="star-display"
-                                    style={{ "--fill-percent": `${fillPercent}%` }}
+                                    style={{
+                                      "--fill-percent": `${fillPercent}%`,
+                                    }}
                                   />
                                 );
                               })}

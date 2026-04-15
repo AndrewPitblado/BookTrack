@@ -3,6 +3,7 @@ const {
   UserAchievement,
   UserBook,
   Book,
+  ReadHistory,
   sequelize,
 } = require("../models");
 
@@ -38,6 +39,33 @@ function evaluateAchievement(achievement, stats) {
     case "page_count":
       current = Number(stats.totalPages || 0);
       target = criteria.totalPages || 0;
+      earned = current >= target;
+      break;
+    case "book_reviews":
+      current = stats.readBooks.filter((record) => {
+        if (record.notes === null || record.notes === undefined) {
+          return false;
+        }
+
+        return String(record.notes).trim().length > 0;
+      }).length;
+      target = criteria.count || 0;
+      earned = current >= target;
+      break;
+    case "high_ratings":
+      current = stats.readBooks.filter((record) => {
+        const rating = Number(record.rating);
+        return Number.isFinite(rating) && rating >= 4;
+      }).length;
+      target = criteria.count || 0;
+      earned = current >= target;
+      break;
+    case "low_ratings":
+      current = stats.readBooks.filter((record) => {
+        const rating = Number(record.rating);
+        return Number.isFinite(rating) && rating <= 3;
+      }).length;
+      target = criteria.count || 0;
       earned = current >= target;
       break;
     case "speed_reading":
@@ -80,6 +108,17 @@ async function getUserStats(userId, transaction) {
     transaction,
   });
 
+  const readHistoryRows = await ReadHistory.findAll({
+    where: { userId },
+    attributes: ["bookId", "startDate", "endDate", "rating", "notes"],
+    order: [
+      ["endDate", "DESC"],
+      ["updatedAt", "DESC"],
+      ["id", "DESC"],
+    ],
+    transaction,
+  });
+
   // Defensive de-duplication by bookId in case legacy data contains duplicates.
   const finishedBooksById = new Map();
   finishedUserBooks.forEach((record) => {
@@ -89,12 +128,29 @@ async function getUserStats(userId, transaction) {
   });
 
   const readBooks = Array.from(finishedBooksById.values());
-  const booksFinished = readBooks.length;
+
+  const latestHistoryByBookId = new Map();
+  readHistoryRows.forEach((record) => {
+    if (!latestHistoryByBookId.has(record.bookId)) {
+      latestHistoryByBookId.set(record.bookId, record);
+    }
+  });
+
+  const readBooksWithHistory = readBooks.map((record) => {
+    const history = latestHistoryByBookId.get(record.bookId);
+    return {
+      ...record.toJSON(),
+      rating: history ? Number(history.rating) : null,
+      notes: history ? history.notes : null,
+    };
+  });
+
+  const booksFinished = readBooksWithHistory.length;
 
   const uniqueGenres = new Set();
   const genreCounts = {};
 
-  readBooks.forEach((record) => {
+  readBooksWithHistory.forEach((record) => {
     const genres = record.Book?.genres || [];
     genres.forEach((genre) => {
       uniqueGenres.add(genre);
@@ -123,14 +179,14 @@ async function getUserStats(userId, transaction) {
     authorCounts[row.id] = parseInt(row.count, 10);
   });
 
-  const totalPages = readBooks.reduce((sum, record) => {
+  const totalPages = readBooksWithHistory.reduce((sum, record) => {
     const pageCount = Number(record.Book?.pageCount || 0);
     return sum + (Number.isFinite(pageCount) ? pageCount : 0);
   }, 0);
 
   return {
     booksFinished,
-    readBooks,
+    readBooks: readBooksWithHistory,
     uniqueGenres,
     genreCounts,
     authorCounts,

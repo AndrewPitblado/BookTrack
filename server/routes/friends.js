@@ -385,7 +385,7 @@ router.get("/:userId/achievements", authMiddleware, async (req, res) => {
       include: [
         {
           model: Achievement,
-          attributes: ["id", "name", "description", "icon", "points", "tier"],
+          attributes: ["id", "name", "description", "icon", "points", "tier", "isSecret"],
         },
       ],
       order: [["unlockedAt", "DESC"]],

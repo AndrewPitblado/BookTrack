@@ -1,8 +1,10 @@
 require('dotenv').config();
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const { sequelize } = require('./models');
 const { seedAchievements } = require('./seedAchievements');
+const { convertIcons } = require('./convertIcons');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -24,6 +26,9 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Serve static assets (achievement icons, etc.)
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
@@ -44,6 +49,13 @@ async function startServer() {
   try {
     await sequelize.sync(syncOptions);
     console.log('Database synced successfully');
+
+    // Convert SVG achievement icons to PNGs for iOS
+    try {
+      await convertIcons();
+    } catch (iconError) {
+      console.error('Icon conversion failed:', iconError);
+    }
 
     if (autoSeedAchievements) {
       try {

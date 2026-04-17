@@ -2,13 +2,15 @@ const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
 
-const SVG_DIR = path.join(
+const SVG_DIR_LOCAL = path.join(__dirname, "public", "achievement-icons");
+const SVG_DIR_CLIENT = path.join(
   __dirname,
   "..",
   "client",
   "public",
   "achievement-icons",
 );
+const SVG_DIR = fs.existsSync(SVG_DIR_LOCAL) ? SVG_DIR_LOCAL : SVG_DIR_CLIENT;
 const PNG_DIR = path.join(__dirname, "public", "achievement-icons-png");
 const SIZE = 128;
 

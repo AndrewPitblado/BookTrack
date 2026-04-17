@@ -35,4 +35,3 @@ out/
 
 # Generated server assets (auto-created on startup)
 server/public/achievement-icons-png/
-server/public/achievement-icons/

@@ -45,7 +45,7 @@ app.get("/api/health", (req, res) => {
 
 const PORT = process.env.PORT || 5001;
 const syncOptions =
-  process.env.NODE_ENV === "production" ? {} : { alter: true };
+  process.env.NODE_ENV === "production" ? {} : { alter: false };
 const autoSeedAchievements = process.env.AUTO_SEED_ACHIEVEMENTS !== "false";
 
 async function startServer() {

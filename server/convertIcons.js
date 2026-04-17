@@ -1,25 +1,33 @@
-const fs = require('fs');
-const path = require('path');
-const sharp = require('sharp');
+const fs = require("fs");
+const path = require("path");
+const sharp = require("sharp");
 
-const SVG_DIR = path.join(__dirname, '..', 'client', 'public', 'achievement-icons');
-const PNG_DIR = path.join(__dirname, 'public', 'achievement-icons-png');
+const SVG_DIR = path.join(
+  __dirname,
+  "..",
+  "client",
+  "public",
+  "achievement-icons",
+);
+const PNG_DIR = path.join(__dirname, "public", "achievement-icons-png");
 const SIZE = 128;
 
 async function convertIcons() {
   if (!fs.existsSync(SVG_DIR)) {
-    console.log('No achievement-icons source directory found, skipping icon conversion');
+    console.log(
+      "No achievement-icons source directory found, skipping icon conversion",
+    );
     return;
   }
 
   fs.mkdirSync(PNG_DIR, { recursive: true });
 
-  const svgFiles = fs.readdirSync(SVG_DIR).filter(f => f.endsWith('.svg'));
+  const svgFiles = fs.readdirSync(SVG_DIR).filter((f) => f.endsWith(".svg"));
   let converted = 0;
   let skipped = 0;
 
   for (const svgFile of svgFiles) {
-    const pngFile = svgFile.replace('.svg', '.png');
+    const pngFile = svgFile.replace(".svg", ".png");
     const svgPath = path.join(SVG_DIR, svgFile);
     const pngPath = path.join(PNG_DIR, pngFile);
 
@@ -35,7 +43,10 @@ async function convertIcons() {
 
     try {
       await sharp(svgPath)
-        .resize(SIZE, SIZE, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+        .resize(SIZE, SIZE, {
+          fit: "contain",
+          background: { r: 0, g: 0, b: 0, alpha: 0 },
+        })
         .png()
         .toFile(pngPath);
       converted++;
@@ -45,10 +56,10 @@ async function convertIcons() {
   }
 
   // Clean up PNGs whose SVG source no longer exists
-  const pngFiles = fs.readdirSync(PNG_DIR).filter(f => f.endsWith('.png'));
+  const pngFiles = fs.readdirSync(PNG_DIR).filter((f) => f.endsWith(".png"));
   let removed = 0;
   for (const pngFile of pngFiles) {
-    const svgFile = pngFile.replace('.png', '.svg');
+    const svgFile = pngFile.replace(".png", ".svg");
     if (!fs.existsSync(path.join(SVG_DIR, svgFile))) {
       fs.unlinkSync(path.join(PNG_DIR, pngFile));
       removed++;
@@ -56,7 +67,9 @@ async function convertIcons() {
   }
 
   if (converted > 0 || removed > 0) {
-    console.log(`Icon conversion: ${converted} converted, ${skipped} up-to-date, ${removed} removed`);
+    console.log(
+      `Icon conversion: ${converted} converted, ${skipped} up-to-date, ${removed} removed`,
+    );
   } else {
     console.log(`Icon conversion: all ${skipped} icons up-to-date`);
   }

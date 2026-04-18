@@ -32,6 +32,9 @@ function getAPNsToken() {
   let key;
   if (keyContents) {
     key = keyContents.replace(/\\n/g, "\n");
+    console.log(
+      `APNs key: length=${key.length}, starts="${key.substring(0, 30)}", ends="${key.substring(key.length - 30)}", newlines=${(key.match(/\n/g) || []).length}`,
+    );
   } else {
     const resolvedPath = path.resolve(keyPath);
     key = fs.readFileSync(resolvedPath, "utf8");

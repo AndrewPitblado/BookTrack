@@ -31,9 +31,16 @@ function getAPNsToken() {
   // Prefer APNS_KEY env var (for platforms like Railway), fall back to file
   let key;
   if (keyContents) {
-    key = keyContents.replace(/\\n/g, "\n");
+    key = keyContents
+      .replace(/\\n/g, "\n") // literal \n -> real newlines
+      .split("\n")
+      .map((line) => line.trim()) // strip stray spaces from each line
+      .filter((line) => line.length > 0) // remove empty lines
+      .join("\n");
+    // Ensure trailing newline
+    key += "\n";
     console.log(
-      `APNs key: length=${key.length}, starts="${key.substring(0, 30)}", ends="${key.substring(key.length - 30)}", newlines=${(key.match(/\n/g) || []).length}`,
+      `APNs key: length=${key.length}, lines=${key.trim().split("\n").length}, starts="${key.substring(0, 32)}"`,
     );
   } else {
     const resolvedPath = path.resolve(keyPath);

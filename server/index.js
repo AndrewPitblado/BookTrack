@@ -12,6 +12,7 @@ const bookRoutes = require("./routes/books");
 const userBookRoutes = require("./routes/userBooks");
 const achievementRoutes = require("./routes/achievements");
 const friendRoutes = require("./routes/friends");
+const deviceTokenRoutes = require("./routes/deviceTokens");
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use("/api/books", bookRoutes);
 app.use("/api/user-books", userBookRoutes);
 app.use("/api/achievements", achievementRoutes);
 app.use("/api/friends", friendRoutes);
+app.use("/api/device-tokens", deviceTokenRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

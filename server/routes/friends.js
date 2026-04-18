@@ -11,6 +11,10 @@ const {
 } = require("../models");
 const authMiddleware = require("../middleware/auth");
 const { Op } = require("sequelize");
+const {
+  notifyFriendRequest,
+  notifyFriendAccepted,
+} = require("../services/notificationService");
 
 // Search for users by username
 router.get("/search", authMiddleware, async (req, res) => {
@@ -100,6 +104,9 @@ router.post("/request", authMiddleware, async (req, res) => {
       status: "pending",
     });
 
+    // Send push notification to the recipient
+    notifyFriendRequest(friendId, req.user.username);
+
     res.status(201).json({ message: "Friend request sent", friendship });
   } catch (error) {
     console.error("Error sending friend request:", error);
@@ -148,6 +155,9 @@ router.put("/accept/:id", authMiddleware, async (req, res) => {
 
     friendship.status = "accepted";
     await friendship.save();
+
+    // Notify the original requester that their request was accepted
+    notifyFriendAccepted(friendship.userId, req.user.username);
 
     res.json({ message: "Friend request accepted", friendship });
   } catch (error) {

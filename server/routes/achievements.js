@@ -27,7 +27,30 @@ router.get("/", auth, async (req, res) => {
 // GET /api/achievements/user - Get user's unlocked achievements
 router.get("/user", auth, async (req, res) => {
   try {
-    await reconcileUserAchievements(req.userId);
+    const { unlockedCount, newlyUnlocked } = await reconcileUserAchievements(req.userId);
+
+    // Send push notifications for newly unlocked achievements
+    if (unlockedCount > 0) {
+      notifyAchievementsUnlocked(req.userId, newlyUnlocked);
+      const friendships = await Friendship.findAll({
+        where: {
+          [Op.or]: [{ userId: req.userId }, { friendId: req.userId }],
+          status: "accepted",
+        },
+      });
+      const friendIds = friendships.map((f) =>
+        f.userId === req.userId ? f.friendId : f.userId,
+      );
+      if (friendIds.length > 0) {
+        const user = await User.findByPk(req.userId, {
+          attributes: ["username"],
+        });
+        const names = newlyUnlocked.map(
+          (a) => a.Achievement?.name || "an achievement",
+        );
+        notifyFriendsOfAchievement(req.userId, user.username, names, friendIds);
+      }
+    }
 
     const userAchievements = await UserAchievement.findAll({
       where: { userId: req.userId },
@@ -45,7 +68,30 @@ router.get("/user", auth, async (req, res) => {
 // GET /api/achievements/progress - Get progress for all achievements
 router.get("/progress", auth, async (req, res) => {
   try {
-    await reconcileUserAchievements(req.userId);
+    const { unlockedCount, newlyUnlocked } = await reconcileUserAchievements(req.userId);
+
+    // Send push notifications for newly unlocked achievements
+    if (unlockedCount > 0) {
+      notifyAchievementsUnlocked(req.userId, newlyUnlocked);
+      const friendships = await Friendship.findAll({
+        where: {
+          [Op.or]: [{ userId: req.userId }, { friendId: req.userId }],
+          status: "accepted",
+        },
+      });
+      const friendIds = friendships.map((f) =>
+        f.userId === req.userId ? f.friendId : f.userId,
+      );
+      if (friendIds.length > 0) {
+        const user = await User.findByPk(req.userId, {
+          attributes: ["username"],
+        });
+        const names = newlyUnlocked.map(
+          (a) => a.Achievement?.name || "an achievement",
+        );
+        notifyFriendsOfAchievement(req.userId, user.username, names, friendIds);
+      }
+    }
 
     const progress = await getAchievementProgress(req.userId);
 

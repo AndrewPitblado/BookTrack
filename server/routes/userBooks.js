@@ -1,6 +1,11 @@
 const express = require("express");
-const { UserBook, Book, ReadHistory, Author } = require("../models");
+const { UserBook, Book, ReadHistory, Author, User, Friendship } = require("../models");
 const { reconcileUserAchievements } = require("../services/achievementEngine");
+const {
+  notifyAchievementsUnlocked,
+  notifyFriendsOfAchievement,
+} = require("../services/notificationService");
+const { Op } = require("sequelize");
 const auth = require("../middleware/auth");
 
 const router = express.Router();
@@ -24,7 +29,34 @@ function normalizeHalfStepRating(rating) {
 }
 
 async function reconcileAchievementsForUser(userId) {
-  await reconcileUserAchievements(userId);
+  const { newlyUnlocked, unlockedCount } = await reconcileUserAchievements(userId);
+
+  if (unlockedCount > 0) {
+    // Notify the user
+    notifyAchievementsUnlocked(userId, newlyUnlocked);
+
+    // Notify their friends
+    try {
+      const friendships = await Friendship.findAll({
+        where: {
+          [Op.or]: [{ userId }, { friendId: userId }],
+          status: "accepted",
+        },
+      });
+      const friendIds = friendships.map((f) =>
+        f.userId === userId ? f.friendId : f.userId,
+      );
+      if (friendIds.length > 0) {
+        const user = await User.findByPk(userId, { attributes: ["username"] });
+        const names = newlyUnlocked.map(
+          (a) => a.Achievement?.name || "an achievement",
+        );
+        notifyFriendsOfAchievement(userId, user.username, names, friendIds);
+      }
+    } catch (err) {
+      console.error("Error notifying friends of achievement:", err.message);
+    }
+  }
 }
 
 // GET /api/user-books - Get all books for current user

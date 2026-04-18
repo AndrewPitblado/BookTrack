@@ -56,9 +56,17 @@ function getAPNsToken() {
  * @returns {Promise<{ statusCode: number, deviceToken: string }>}
  */
 function sendPush(deviceToken, payload, options = {}) {
-  const isProduction = process.env.NODE_ENV === "production";
+  // APNS_ENVIRONMENT overrides NODE_ENV for explicit control
+  const apnsEnv = process.env.APNS_ENVIRONMENT; // "production" or "sandbox"
+  const isProduction =
+    apnsEnv === "production" ||
+    (!apnsEnv && process.env.NODE_ENV === "production");
   const host = isProduction ? APNS_HOST_PROD : APNS_HOST_DEV;
   const topic = options.topic || process.env.APNS_BUNDLE_ID;
+
+  console.log(
+    `APNs: sending to ${isProduction ? "production" : "sandbox"} for device ${deviceToken.substring(0, 8)}...`,
+  );
 
   if (!topic) {
     return Promise.reject(new Error("Missing APNS_BUNDLE_ID"));
@@ -140,11 +148,28 @@ async function sendToUser(userId, payload, options = {}) {
   const { DeviceToken } = require("../models");
 
   const tokens = await DeviceToken.findAll({ where: { userId } });
-  if (tokens.length === 0) return [];
+  if (tokens.length === 0) {
+    console.log(`APNs: no device tokens found for user ${userId}, skipping`);
+    return [];
+  }
+
+  console.log(`APNs: sending to ${tokens.length} device(s) for user ${userId}`);
 
   const results = await Promise.allSettled(
     tokens.map((t) => sendPush(t.token, payload, options)),
   );
+
+  for (const result of results) {
+    if (result.status === "fulfilled") {
+      console.log(
+        `APNs: push sent successfully to ${result.value.deviceToken.substring(0, 8)}...`,
+      );
+    } else {
+      console.error(
+        `APNs: push failed - ${result.reason?.message || result.reason}`,
+      );
+    }
+  }
 
   // Clean up invalid tokens
   const invalidReasons = new Set(["Unregistered", "BadDeviceToken"]);

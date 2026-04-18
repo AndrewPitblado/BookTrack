@@ -14,6 +14,9 @@ router.post("/", authMiddleware, async (req, res) => {
     }
 
     // Upsert: if token exists for another user, reassign it
+    console.log(
+      `Device token registration: user=${req.user.id}, token=${token.substring(0, 8)}..., platform=${platform || "ios"}`,
+    );
     const existing = await DeviceToken.findOne({ where: { token } });
 
     if (existing) {

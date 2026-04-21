@@ -1,18 +1,32 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { User } = require('../models');
+const express = require("express");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { User } = require("../models");
+const { getReadingStreakForUser } = require("../services/readingStreakService");
 
 const router = express.Router();
 
+async function serializeUserWithStreak(user, includeCreatedAt = false) {
+  const streak = await getReadingStreakForUser(user.id);
+  return {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    ...(includeCreatedAt ? { createdAt: user.createdAt } : {}),
+    currentStreak: streak.currentStreak,
+    longestStreak: streak.longestStreak,
+    lastReadingDate: streak.lastReadingDate,
+  };
+}
+
 // POST /api/auth/register
-router.post('/register', async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
     // Validate input
     if (!username || !email || !password) {
-      return res.status(400).json({ message: 'All fields are required' });
+      return res.status(400).json({ message: "All fields are required" });
     }
 
     // Check if user already exists
@@ -21,7 +35,7 @@ router.post('/register', async (req, res) => {
     });
 
     if (existingUser) {
-      return res.status(400).json({ message: 'Email already registered' });
+      return res.status(400).json({ message: "Email already registered" });
     }
 
     // Hash password
@@ -35,88 +49,78 @@ router.post('/register', async (req, res) => {
     });
 
     // Generate token
-    const token = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-    );
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+    });
 
     res.status(201).json({
-      message: 'User registered successfully',
+      message: "User registered successfully",
       token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-      },
+      user: await serializeUserWithStreak(user),
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
     // Validate input
     if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
     }
 
     // Find user
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     // Check password
     const isValidPassword = await bcrypt.compare(password, user.password);
 
     if (!isValidPassword) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     // Generate token
-    const token = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-    );
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+    });
 
     res.json({
-      message: 'Login successful',
+      message: "Login successful",
       token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-      },
+      user: await serializeUserWithStreak(user),
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
 // GET /api/auth/me - Get current user
-router.get('/me', require('../middleware/auth'), async (req, res) => {
+router.get("/me", require("../middleware/auth"), async (req, res) => {
   try {
     const user = await User.findByPk(req.userId, {
-      attributes: ['id', 'username', 'email', 'createdAt'],
+      attributes: ["id", "username", "email", "createdAt"],
     });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    res.json({ user });
+    res.json({ user: await serializeUserWithStreak(user, true) });
   } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Get user error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

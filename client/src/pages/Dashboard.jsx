@@ -12,6 +12,8 @@ const Dashboard = () => {
     finished: 0,
     achievements: 0,
     totalPoints: 0,
+    currentStreak: 0,
+    lastReadingDate: null,
   });
   const [recentBooks, setRecentBooks] = useState([]);
   const [friends, setFriends] = useState([]);
@@ -21,12 +23,17 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [booksResponse, achievementsResponse, friendsResponse] =
-          await Promise.all([
-            api.get("/user-books"),
-            api.get("/achievements/user"),
-            api.get("/friends"),
-          ]);
+        const [
+          booksResponse,
+          achievementsResponse,
+          friendsResponse,
+          streakResponse,
+        ] = await Promise.all([
+          api.get("/user-books"),
+          api.get("/achievements/user"),
+          api.get("/friends"),
+          api.get("/users/me/streak"),
+        ]);
 
         const userBooks = booksResponse.data.userBooks;
         const userAchievements = achievementsResponse.data.userAchievements;
@@ -42,8 +49,18 @@ const Dashboard = () => {
           (sum, ua) => sum + (ua.Achievement?.points || 0),
           0,
         );
+        const currentStreak = streakResponse.data?.streak?.currentStreak || 0;
+        const lastReadingDate =
+          streakResponse.data?.streak?.lastReadingDate || null;
 
-        setStats({ reading, finished, achievements, totalPoints });
+        setStats({
+          reading,
+          finished,
+          achievements,
+          totalPoints,
+          currentStreak,
+          lastReadingDate,
+        });
         setRecentBooks(userBooks.slice(0, 5));
         setRecentAchievements(userAchievements.slice(0, 7));
         setFriends(friendsList);
@@ -65,6 +82,41 @@ const Dashboard = () => {
   const featuredFriend = friends.slice(0, 3); //Show first three friends if we have them, otherwise just one or none
   const friendCount = friends.length;
 
+  const formatLastReadLabel = (dateString) => {
+    if (!dateString) {
+      return "Last read: No logs yet";
+    }
+
+    const parsed = new Date(dateString);
+    if (Number.isNaN(parsed.getTime())) {
+      return "Last read: No logs yet";
+    }
+
+    const readDay = new Date(
+      parsed.getFullYear(),
+      parsed.getMonth(),
+      parsed.getDate(),
+    );
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const daysAgo = Math.round((today - readDay) / msPerDay);
+
+    if (daysAgo === 0) {
+      return "Last read: Today";
+    }
+
+    if (daysAgo === 1) {
+      return "Last read: Yesterday";
+    }
+
+    if (daysAgo > 1 && daysAgo <= 6) {
+      return `Last read: ${daysAgo} days ago`;
+    }
+
+    return `Last read: ${parsed.toLocaleDateString()}`;
+  };
+
   return (
     <div className="dashboard">
       <h1>Welcome back, {user?.username}! 📖</h1>
@@ -85,6 +137,13 @@ const Dashboard = () => {
         <div className="stat-card stat-points">
           <span className="stat-number">{stats.totalPoints}</span>
           <span className="stat-label">Total Points</span>
+        </div>
+        <div className="stat-card stat-streak">
+          <span className="stat-number">{stats.currentStreak}</span>
+          <span className="stat-label">Day Streak</span>
+          <span className="stat-subtext">
+            {formatLastReadLabel(stats.lastReadingDate)}
+          </span>
         </div>
       </div>
       {/* Contextual Quick Actions */}

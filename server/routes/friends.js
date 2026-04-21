@@ -15,6 +15,7 @@ const {
   notifyFriendRequest,
   notifyFriendAccepted,
 } = require("../services/notificationService");
+const { getReadingStreakForUser } = require("../services/readingStreakService");
 
 // Search for users by username
 router.get("/search", authMiddleware, async (req, res) => {
@@ -287,6 +288,7 @@ router.get("/:userId/stats", authMiddleware, async (req, res) => {
       (sum, ua) => sum + (ua.Achievement?.points || 0),
       0,
     );
+    const streak = await getReadingStreakForUser(userId);
 
     res.json({
       user,
@@ -295,6 +297,9 @@ router.get("/:userId/stats", authMiddleware, async (req, res) => {
         finished,
         achievements,
         totalPoints,
+        currentStreak: streak.currentStreak,
+        longestStreak: streak.longestStreak,
+        lastReadingDate: streak.lastReadingDate,
       },
     });
   } catch (error) {

@@ -5,11 +5,16 @@ const cors = require("cors");
 const { sequelize } = require("./models");
 const { seedAchievements } = require("./seedAchievements");
 const { convertIcons } = require("./convertIcons");
+const {
+  backfillReadingLogsFromCurrentProgress,
+} = require("./services/readingLogBackfillService");
 
 // Import routes
 const authRoutes = require("./routes/auth");
 const bookRoutes = require("./routes/books");
 const userBookRoutes = require("./routes/userBooks");
+const readingLogRoutes = require("./routes/readingLogs");
+const userRoutes = require("./routes/users");
 const achievementRoutes = require("./routes/achievements");
 const friendRoutes = require("./routes/friends");
 const deviceTokenRoutes = require("./routes/deviceTokens");
@@ -36,6 +41,8 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/api/auth", authRoutes);
 app.use("/api/books", bookRoutes);
 app.use("/api/user-books", userBookRoutes);
+app.use("/api/reading-logs", readingLogRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/achievements", achievementRoutes);
 app.use("/api/friends", friendRoutes);
 app.use("/api/device-tokens", deviceTokenRoutes);
@@ -49,6 +56,8 @@ const PORT = process.env.PORT || 5001;
 const syncOptions =
   process.env.NODE_ENV === "production" ? {} : { alter: false };
 const autoSeedAchievements = process.env.AUTO_SEED_ACHIEVEMENTS !== "false";
+const autoBackfillReadingLogs =
+  process.env.AUTO_BACKFILL_READING_LOGS !== "false";
 
 async function startServer() {
   try {
@@ -60,6 +69,21 @@ async function startServer() {
       await convertIcons();
     } catch (iconError) {
       console.error("Icon conversion failed:", iconError);
+    }
+
+    if (autoBackfillReadingLogs) {
+      try {
+        const result = await backfillReadingLogsFromCurrentProgress();
+        console.log(
+          `Reading-log backfill complete (scanned=${result.scanned}, created=${result.created}, skippedExisting=${result.skippedExisting})`,
+        );
+      } catch (backfillError) {
+        console.error("Reading-log backfill failed:", backfillError);
+      }
+    } else {
+      console.log(
+        "Reading-log backfill skipped (AUTO_BACKFILL_READING_LOGS=false)",
+      );
     }
 
     if (autoSeedAchievements) {

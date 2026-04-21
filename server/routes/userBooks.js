@@ -1,5 +1,13 @@
 const express = require("express");
-const { UserBook, Book, ReadHistory, Author, User, Friendship } = require("../models");
+const {
+  UserBook,
+  Book,
+  ReadHistory,
+  ReadingLog,
+  Author,
+  User,
+  Friendship,
+} = require("../models");
 const { reconcileUserAchievements } = require("../services/achievementEngine");
 const {
   notifyAchievementsUnlocked,
@@ -29,7 +37,8 @@ function normalizeHalfStepRating(rating) {
 }
 
 async function reconcileAchievementsForUser(userId) {
-  const { newlyUnlocked, unlockedCount } = await reconcileUserAchievements(userId);
+  const { newlyUnlocked, unlockedCount } =
+    await reconcileUserAchievements(userId);
 
   if (unlockedCount > 0) {
     // Notify the user
@@ -232,10 +241,42 @@ router.put("/:id", auth, async (req, res) => {
     const previousStatus = userBook.status;
 
     // Update fields
+    const previousPage = Number.isFinite(Number(userBook.currentPage))
+      ? Number(userBook.currentPage)
+      : 0;
+    let normalizedCurrentPage;
+
     if (status) userBook.status = status;
     if (startDate) userBook.startDate = startDate;
     if (endDate) userBook.endDate = endDate;
-    if (currentPage !== undefined) userBook.currentPage = currentPage;
+    if (currentPage !== undefined) {
+      normalizedCurrentPage = Number(currentPage);
+      if (
+        !Number.isInteger(normalizedCurrentPage) ||
+        normalizedCurrentPage < 0
+      ) {
+        return res
+          .status(400)
+          .json({ message: "currentPage must be a non-negative integer" });
+      }
+      userBook.currentPage = normalizedCurrentPage;
+    }
+
+    // Keep streak data in sync for web progress updates.
+    if (
+      normalizedCurrentPage !== undefined &&
+      normalizedCurrentPage > previousPage
+    ) {
+      await ReadingLog.create({
+        userId: req.userId,
+        userBookId: userBook.id,
+        bookId: userBook.bookId,
+        pagesRead: normalizedCurrentPage - previousPage,
+        startPage: previousPage,
+        endPage: normalizedCurrentPage,
+        loggedAt: new Date(),
+      });
+    }
 
     // If marked as finished, set endDate and create read history
     if (status === "finished" && previousStatus !== "finished") {

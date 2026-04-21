@@ -5,6 +5,7 @@ const Author = require("./Author");
 const BookAuthor = require("./BookAuthor");
 const UserBook = require("./UserBook");
 const ReadHistory = require("./ReadHistory");
+const ReadingLog = require("./ReadingLog");
 const Achievement = require("./Achievement");
 const UserAchievement = require("./UserAchievement");
 const Friendship = require("./Friendship");
@@ -38,6 +39,16 @@ ReadHistory.belongsTo(User, { foreignKey: "userId" });
 Book.hasMany(ReadHistory, { foreignKey: "bookId", as: "readHistory" });
 ReadHistory.belongsTo(Book, { foreignKey: "bookId" });
 
+// User <-> ReadingLog <-> UserBook <-> Book
+User.hasMany(ReadingLog, { foreignKey: "userId", as: "readingLogs" });
+ReadingLog.belongsTo(User, { foreignKey: "userId" });
+
+UserBook.hasMany(ReadingLog, { foreignKey: "userBookId", as: "readingLogs" });
+ReadingLog.belongsTo(UserBook, { foreignKey: "userBookId" });
+
+Book.hasMany(ReadingLog, { foreignKey: "bookId", as: "readingLogs" });
+ReadingLog.belongsTo(Book, { foreignKey: "bookId" });
+
 // User <-> UserAchievement <-> Achievement
 User.hasMany(UserAchievement, { foreignKey: "userId", as: "userAchievements" });
 UserAchievement.belongsTo(User, { foreignKey: "userId" });
@@ -66,6 +77,7 @@ module.exports = {
   BookAuthor,
   UserBook,
   ReadHistory,
+  ReadingLog,
   Achievement,
   UserAchievement,
   Friendship,

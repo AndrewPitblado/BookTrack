@@ -84,6 +84,22 @@
   color: #3498db;
 }
 
+.stat-card.stat-streak {
+  border-top: 4px solid #e67e22;
+}
+
+.stat-card.stat-streak .stat-number {
+  color: #e67e22;
+}
+
+.stat-card.stat-streak-best {
+  border-top: 4px solid #d35400;
+}
+
+.stat-card.stat-streak-best .stat-number {
+  color: #d35400;
+}
+
 .stat-number {
   display: block;
   font-size: 2.5rem;
@@ -93,6 +109,13 @@
 .stat-label {
   color: #666;
   font-size: 0.9rem;
+}
+
+.stat-subtext {
+  display: block;
+  margin-top: 0.4rem;
+  color: #8a8a8a;
+  font-size: 0.75rem;
 }
 
 .profile-sections {

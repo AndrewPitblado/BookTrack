@@ -55,6 +55,41 @@ const FriendProfile = () => {
     );
   }
 
+  const formatLastReadLabel = (dateString) => {
+    if (!dateString) {
+      return "Last read: No logs yet";
+    }
+
+    const parsed = new Date(dateString);
+    if (Number.isNaN(parsed.getTime())) {
+      return "Last read: No logs yet";
+    }
+
+    const readDay = new Date(
+      parsed.getFullYear(),
+      parsed.getMonth(),
+      parsed.getDate(),
+    );
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const daysAgo = Math.round((today - readDay) / msPerDay);
+
+    if (daysAgo === 0) {
+      return "Last read: Today";
+    }
+
+    if (daysAgo === 1) {
+      return "Last read: Yesterday";
+    }
+
+    if (daysAgo > 1 && daysAgo <= 6) {
+      return `Last read: ${daysAgo} days ago`;
+    }
+
+    return `Last read: ${parsed.toLocaleDateString()}`;
+  };
+
   return (
     <div className="friend-profile">
       <Link to="/friends" className="back-link">
@@ -84,6 +119,20 @@ const FriendProfile = () => {
         <div className="stat-card stat-points">
           <span className="stat-number">{stats?.totalPoints || 0}</span>
           <span className="stat-label">Total Points</span>
+        </div>
+        <div className="stat-card stat-streak">
+          <span className="stat-number">{stats?.currentStreak || 0}</span>
+          <span className="stat-label">Current Streak</span>
+          <span className="stat-subtext">
+            {formatLastReadLabel(stats?.lastReadingDate)}
+          </span>
+        </div>
+        <div className="stat-card stat-streak-best">
+          <span className="stat-number">{stats?.longestStreak || 0}</span>
+          <span className="stat-label">Longest Streak</span>
+          <span className="stat-subtext">
+            {formatLastReadLabel(stats?.lastReadingDate)}
+          </span>
         </div>
       </div>
 

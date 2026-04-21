@@ -10,6 +10,7 @@ const Achievement = require("./Achievement");
 const UserAchievement = require("./UserAchievement");
 const Friendship = require("./Friendship");
 const DeviceToken = require("./DeviceToken");
+const Goal = require("./Goal");
 
 // Define associations
 
@@ -69,6 +70,10 @@ Friendship.belongsTo(User, { foreignKey: "friendId", as: "friend" });
 User.hasMany(DeviceToken, { foreignKey: "userId", as: "deviceTokens" });
 DeviceToken.belongsTo(User, { foreignKey: "userId" });
 
+// User <-> Goal
+User.hasMany(Goal, { foreignKey: "userId", as: "goals" });
+Goal.belongsTo(User, { foreignKey: "userId" });
+
 module.exports = {
   sequelize,
   User,
@@ -82,4 +87,5 @@ module.exports = {
   UserAchievement,
   Friendship,
   DeviceToken,
+  Goal,
 };

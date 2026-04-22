@@ -8,7 +8,9 @@
     "dev": "nodemon index.js",
     "seed:achievements": "node seedAchievements.js",
     "reconcile:achievements": "node reconcileAchievements.js",
-    "reconcile:achievements:apply": "node reconcileAchievements.js --apply"
+    "reconcile:achievements:apply": "node reconcileAchievements.js --apply",
+    "reconcile:reading-logs": "node reconcileReadingLogs.js",
+    "reconcile:reading-logs:apply": "node reconcileReadingLogs.js --apply"
   },
   "dependencies": {
     "axios": "^1.6.2",

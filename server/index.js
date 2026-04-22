@@ -2,6 +2,7 @@ require("dotenv").config();
 const path = require("path");
 const express = require("express");
 const cors = require("cors");
+const { DataTypes } = require("sequelize");
 const { sequelize } = require("./models");
 const { seedAchievements } = require("./seedAchievements");
 const { convertIcons } = require("./convertIcons");
@@ -61,9 +62,28 @@ const autoSeedAchievements = process.env.AUTO_SEED_ACHIEVEMENTS !== "false";
 const autoBackfillReadingLogs =
   process.env.AUTO_BACKFILL_READING_LOGS !== "false";
 
+async function ensureGoalSchema() {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const table = await queryInterface.describeTable("goals");
+
+    if (!table.isPrimary) {
+      await queryInterface.addColumn("goals", "isPrimary", {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      });
+      console.log("Added missing goals.isPrimary column");
+    }
+  } catch (error) {
+    console.error("Goal schema check failed:", error);
+  }
+}
+
 async function startServer() {
   try {
     await sequelize.sync(syncOptions);
+    await ensureGoalSchema();
     console.log("Database synced successfully");
 
     // Convert SVG achievement icons to PNGs for iOS

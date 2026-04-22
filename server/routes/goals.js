@@ -32,11 +32,32 @@ function parseOptionalBoolean(value) {
   return null;
 }
 
-function getPeriodBounds(type, referenceDate = new Date()) {
-  const now = new Date(referenceDate);
-  const year = now.getUTCFullYear();
-  const month = now.getUTCMonth();
-  const day = now.getUTCDate();
+function parseTimezoneOffsetMinutes(value) {
+  if (value === undefined || value === null || value === "") {
+    return 0;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < -840 || parsed > 840) {
+    return null;
+  }
+
+  return parsed;
+}
+
+function getPeriodBounds(
+  type,
+  referenceDate = new Date(),
+  tzOffsetMinutes = 0,
+) {
+  const nowMs = new Date(referenceDate).getTime();
+  const shiftedNow = new Date(nowMs + tzOffsetMinutes * 60 * 1000);
+  const year = shiftedNow.getUTCFullYear();
+  const month = shiftedNow.getUTCMonth();
+  const day = shiftedNow.getUTCDate();
+
+  const toUtcDate = (utcLikeDate) =>
+    new Date(utcLikeDate.getTime() - tzOffsetMinutes * 60 * 1000);
 
   let start;
   let end;
@@ -45,7 +66,7 @@ function getPeriodBounds(type, referenceDate = new Date()) {
     start = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
     end = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
   } else if (type === "weekly") {
-    const dayOfWeek = now.getUTCDay(); // 0=Sun ... 6=Sat
+    const dayOfWeek = shiftedNow.getUTCDay(); // 0=Sun ... 6=Sat
     const diffFromMonday = (dayOfWeek + 6) % 7;
     start = new Date(Date.UTC(year, month, day - diffFromMonday, 0, 0, 0, 0));
     end = new Date(start);
@@ -59,11 +80,11 @@ function getPeriodBounds(type, referenceDate = new Date()) {
     end = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
   }
 
-  return { start, end };
+  return { start: toUtcDate(start), end: toUtcDate(end) };
 }
 
-async function calculateGoalProgress(goal) {
-  const { start, end } = getPeriodBounds(goal.type);
+async function calculateGoalProgress(goal, tzOffsetMinutes = 0) {
+  const { start, end } = getPeriodBounds(goal.type, new Date(), tzOffsetMinutes);
 
   let currentValue = 0;
 
@@ -109,7 +130,14 @@ async function calculateGoalProgress(goal) {
 // GET /api/goals?activeOnly=true
 router.get("/", auth, async (req, res) => {
   try {
-    const { activeOnly } = req.query;
+    const { activeOnly, tzOffsetMinutes } = req.query;
+    const parsedTzOffsetMinutes = parseTimezoneOffsetMinutes(tzOffsetMinutes);
+
+    if (parsedTzOffsetMinutes === null) {
+      return res
+        .status(400)
+        .json({ message: "tzOffsetMinutes must be an integer between -840 and 840" });
+    }
 
     const where = { userId: req.userId };
 
@@ -124,7 +152,7 @@ router.get("/", auth, async (req, res) => {
 
     const goalsWithProgress = await Promise.all(
       goals.map(async (goal) => {
-        const progress = await calculateGoalProgress(goal);
+        const progress = await calculateGoalProgress(goal, parsedTzOffsetMinutes);
         return {
           ...goal.toJSON(),
           progress,

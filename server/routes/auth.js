@@ -12,6 +12,8 @@ async function serializeUserWithStreak(user, includeCreatedAt = false) {
     id: user.id,
     username: user.username,
     email: user.email,
+    avatarUrl: user.avatarUrl || null,
+    avatarId: user.avatarId || null,
     ...(includeCreatedAt ? { createdAt: user.createdAt } : {}),
     currentStreak: streak.currentStreak,
     longestStreak: streak.longestStreak,
@@ -110,7 +112,7 @@ router.post("/login", async (req, res) => {
 router.get("/me", require("../middleware/auth"), async (req, res) => {
   try {
     const user = await User.findByPk(req.userId, {
-      attributes: ["id", "username", "email", "createdAt"],
+      attributes: ["id", "username", "email", "avatarUrl", "avatarId", "createdAt"],
     });
 
     if (!user) {

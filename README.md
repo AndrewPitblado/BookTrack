@@ -87,6 +87,11 @@ INSERT INTO achievements (name, description, criteria, icon, createdAt, updatedA
 - `POST /api/auth/login` - Login user
 - `GET /api/auth/me` - Get current user
 
+### Profile
+- `POST /api/users/me/avatar/upload-url` - Get signed URL for direct avatar upload
+- `PUT /api/users/me/avatar` - Save current user's avatar URL
+- `DELETE /api/users/me/avatar` - Remove current user's avatar
+
 ### Books
 - `GET /api/books/search?q=query` - Search Google Books
 - `POST /api/books` - Add book to database
@@ -117,6 +122,13 @@ JWT_SECRET=your_generated_jwt_secret_key
 JWT_EXPIRES_IN=7d
 PORT=5001
 GOOGLE_BOOKS_API_KEY=optional_api_key
+AVATAR_S3_REGION=us-east-1
+AVATAR_S3_BUCKET=booktrack-avatars
+AVATAR_S3_ACCESS_KEY_ID=your_access_key
+AVATAR_S3_SECRET_ACCESS_KEY=your_secret_key
+# Optional for S3-compatible providers (R2/MinIO)
+AVATAR_S3_ENDPOINT=
+AVATAR_PUBLIC_BASE_URL=
 ```
 
 ### Client (.env)

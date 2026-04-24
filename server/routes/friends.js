@@ -37,7 +37,7 @@ router.get("/search", authMiddleware, async (req, res) => {
           [Op.ne]: req.user.id, // Exclude current user
         },
       },
-      attributes: ["id", "username", "email", "createdAt"],
+      attributes: ["id", "username", "email", "avatarUrl", "avatarId", "createdAt"],
       limit: 20,
     });
 
@@ -127,7 +127,7 @@ router.get("/requests", authMiddleware, async (req, res) => {
         {
           model: User,
           as: "user",
-          attributes: ["id", "username", "email", "createdAt"],
+          attributes: ["id", "username", "email", "avatarUrl", "avatarId", "createdAt"],
         },
       ],
     });
@@ -207,12 +207,12 @@ router.get("/", authMiddleware, async (req, res) => {
         {
           model: User,
           as: "user",
-          attributes: ["id", "username", "email", "createdAt"],
+          attributes: ["id", "username", "email", "avatarUrl", "avatarId", "createdAt"],
         },
         {
           model: User,
           as: "friend",
-          attributes: ["id", "username", "email", "createdAt"],
+          attributes: ["id", "username", "email", "avatarUrl", "avatarId", "createdAt"],
         },
       ],
     });
@@ -261,7 +261,7 @@ router.get("/:userId/stats", authMiddleware, async (req, res) => {
 
     // Get user info
     const user = await User.findByPk(userId, {
-      attributes: ["id", "username", "createdAt"],
+      attributes: ["id", "username", "avatarUrl", "avatarId", "createdAt"],
     });
 
     // Get book stats

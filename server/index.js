@@ -80,10 +80,36 @@ async function ensureGoalSchema() {
   }
 }
 
+async function ensureUserAvatarSchema() {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const table = await queryInterface.describeTable("users");
+
+    if (!table.avatarUrl) {
+      await queryInterface.addColumn("users", "avatarUrl", {
+        type: DataTypes.STRING(2048),
+        allowNull: true,
+      });
+      console.log("Added missing users.avatarUrl column");
+    }
+
+    if (!table.avatarId) {
+      await queryInterface.addColumn("users", "avatarId", {
+        type: DataTypes.STRING(64),
+        allowNull: true,
+      });
+      console.log("Added missing users.avatarId column");
+    }
+  } catch (error) {
+    console.error("User avatar schema check failed:", error);
+  }
+}
+
 async function startServer() {
   try {
     await sequelize.sync(syncOptions);
     await ensureGoalSchema();
+    await ensureUserAvatarSchema();
     console.log("Database synced successfully");
 
     // Convert SVG achievement icons to PNGs for iOS

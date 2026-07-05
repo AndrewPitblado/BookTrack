@@ -80,6 +80,31 @@ async function ensureGoalSchema() {
   }
 }
 
+async function ensurePasswordResetSchema() {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const table = await queryInterface.describeTable("users");
+
+    if (!table.resetPasswordToken) {
+      await queryInterface.addColumn("users", "resetPasswordToken", {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      });
+      console.log("Added missing users.resetPasswordToken column");
+    }
+
+    if (!table.resetPasswordExpires) {
+      await queryInterface.addColumn("users", "resetPasswordExpires", {
+        type: DataTypes.DATE,
+        allowNull: true,
+      });
+      console.log("Added missing users.resetPasswordExpires column");
+    }
+  } catch (error) {
+    console.error("Password reset schema check failed:", error);
+  }
+}
+
 async function ensureUserAvatarSchema() {
   try {
     const queryInterface = sequelize.getQueryInterface();
@@ -110,6 +135,7 @@ async function startServer() {
     await sequelize.sync(syncOptions);
     await ensureGoalSchema();
     await ensureUserAvatarSchema();
+    await ensurePasswordResetSchema();
     console.log("Database synced successfully");
 
     // Convert SVG achievement icons to PNGs for iOS

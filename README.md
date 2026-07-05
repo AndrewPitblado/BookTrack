@@ -65,6 +65,7 @@ Server running on port 5001
 
 ```bash
 cd client
+cp .env.example .env
 npm install
 npm run dev
 ```

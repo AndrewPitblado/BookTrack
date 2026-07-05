@@ -73,7 +73,8 @@ const Register = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={6}
+              pattern="^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]{6,}$"
+              title="Password must be at least 6 characters long and include at least one number and one special character."
             />
           </div>
           
@@ -85,6 +86,8 @@ const Register = () => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
+              pattern="^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]{6,}$"
+              title="Password must be at least 6 characters long and include at least one number and one special character."
             />
           </div>
           

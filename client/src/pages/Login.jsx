@@ -53,9 +53,6 @@ const Login = () => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              //Require a minimum length of 6 characters, one number, and one special character
-              pattern="^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]{6,}$"
-              title="Password must be at least 6 characters long and include at least one number and one special character."
               required
             />
           </div>

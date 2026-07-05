@@ -38,9 +38,13 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (username, email, password) => {
+    //Check password strength on the client side before sending to the server
+    const passwordPattern = /^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]{6,}$/;
+    if (!passwordPattern.test(password)) {
+      throw new Error("Password must be at least 6 characters long and include at least one number and one special character.");
+    }
     const response = await api.post('/auth/register', { username, email, password });
     const { token: newToken, user: userData } = response.data;
-    
     localStorage.setItem('token', newToken);
     setToken(newToken);
     setUser(userData);

@@ -139,6 +139,45 @@
   font-size: 1.25rem;
 }
 
+.goal-highlight {
+  border-top: 4px solid #f1c40f;
+}
+
+.goal-highlight-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.goal-highlight-header h2 {
+  margin-bottom: 0;
+}
+
+.goal-highlight-link {
+  color: #3498db;
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.goal-highlight-bar {
+  height: 10px;
+  margin-bottom: 0.5rem;
+}
+
+.goal-highlight-text {
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.goal-highlight-empty p {
+  color: #666;
+}
+
 .recent-books {
   display: flex;
   flex-direction: column;

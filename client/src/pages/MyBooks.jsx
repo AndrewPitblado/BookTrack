@@ -7,6 +7,8 @@ const MyBooks = () => {
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [hoverRatings, setHoverRatings] = useState({});
+  const [pendingProgressIds, setPendingProgressIds] = useState(() => new Set());
+  const [pageDrafts, setPageDrafts] = useState({});
 
   const formatRating = (value) => {
     if (!Number.isFinite(value)) return "0";
@@ -38,21 +40,65 @@ const MyBooks = () => {
   };
 
   const updateProgress = async (id, currentPage) => {
+    const parsedPage = parseInt(currentPage, 10);
+    if (!Number.isInteger(parsedPage) || parsedPage < 0) return;
+
+    // Guard against overlapping requests for the same book, which can race
+    // on the server and cause pages to be double-logged.
+    if (pendingProgressIds.has(id)) return;
+
+    setPendingProgressIds((prev) => new Set(prev).add(id));
     try {
       await api.put(`/user-books/${id}`, {
-        currentPage: parseInt(currentPage),
+        currentPage: parsedPage,
       });
       // Update local state
-      setUserBooks(
-        userBooks.map((book) =>
-          book.id === id
-            ? { ...book, currentPage: parseInt(currentPage) }
-            : book,
+      setUserBooks((prev) =>
+        prev.map((book) =>
+          book.id === id ? { ...book, currentPage: parsedPage } : book,
         ),
       );
     } catch (error) {
       console.error("Error updating progress:", error);
+    } finally {
+      setPendingProgressIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      setPageDrafts((prev) => {
+        if (!(id in prev)) return prev;
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
     }
+  };
+
+  const commitPageDraft = (id, rawValue, pageCount) => {
+    if (rawValue === "" || rawValue === undefined) {
+      setPageDrafts((prev) => {
+        if (!(id in prev)) return prev;
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      return;
+    }
+
+    const parsedPage = parseInt(rawValue, 10);
+    if (!Number.isInteger(parsedPage)) {
+      setPageDrafts((prev) => {
+        if (!(id in prev)) return prev;
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      return;
+    }
+
+    const clampedPage = Math.max(0, Math.min(pageCount, parsedPage));
+    updateProgress(id, clampedPage);
   };
 
   const updateRatingAndNotes = async (id, rating, notes) => {
@@ -236,7 +282,10 @@ const MyBooks = () => {
                             );
                             updateProgress(userBook.id, newPage);
                           }}
-                          disabled={(userBook.currentPage || 0) === 0}
+                          disabled={
+                            (userBook.currentPage || 0) === 0 ||
+                            pendingProgressIds.has(userBook.id)
+                          }
                         >
                           −
                         </button>
@@ -245,10 +294,29 @@ const MyBooks = () => {
                           type="number"
                           min="0"
                           max={userBook.Book.pageCount}
-                          value={userBook.currentPage || 0}
-                          onChange={(e) =>
-                            updateProgress(userBook.id, e.target.value)
+                          value={
+                            pageDrafts[userBook.id] ??
+                            (userBook.currentPage || 0)
                           }
+                          onChange={(e) =>
+                            setPageDrafts((prev) => ({
+                              ...prev,
+                              [userBook.id]: e.target.value,
+                            }))
+                          }
+                          onBlur={(e) =>
+                            commitPageDraft(
+                              userBook.id,
+                              e.target.value,
+                              userBook.Book.pageCount,
+                            )
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.currentTarget.blur();
+                            }
+                          }}
+                          disabled={pendingProgressIds.has(userBook.id)}
                         />
                         <button
                           className="page-btn page-increment"
@@ -261,7 +329,8 @@ const MyBooks = () => {
                           }}
                           disabled={
                             (userBook.currentPage || 0) >=
-                            userBook.Book.pageCount
+                              userBook.Book.pageCount ||
+                            pendingProgressIds.has(userBook.id)
                           }
                         >
                           +

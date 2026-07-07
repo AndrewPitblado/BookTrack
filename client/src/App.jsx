@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import MyBooks from './pages/MyBooks';
 import BookSearch from './pages/BookSearch';
 import Achievements from './pages/Achievements';
+import Goals from './pages/Goals';
 import Friends from './pages/Friends';
 import FriendProfile from './pages/FriendProfile';
 import './App.css';
@@ -55,6 +56,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Achievements />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/goals"
+                element={
+                  <ProtectedRoute>
+                    <Goals />
                   </ProtectedRoute>
                 }
               />

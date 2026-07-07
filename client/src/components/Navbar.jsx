@@ -56,6 +56,9 @@ const Navbar = () => {
             <Link to="/achievements" onClick={closeMenu}>
               Achievements
             </Link>
+            <Link to="/goals" onClick={closeMenu}>
+              Goals
+            </Link>
             <Link to="/friends" onClick={closeMenu}>
               Friends
             </Link>

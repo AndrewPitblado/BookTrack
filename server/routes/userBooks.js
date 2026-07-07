@@ -222,33 +222,7 @@ router.put("/:id", auth, async (req, res) => {
       return res.status(400).json({ message: validationError.message });
     }
 
-    const userBook = await UserBook.findOne({
-      where: { id: req.params.id, userId: req.userId },
-      include: [
-        {
-          model: Book,
-          include: [
-            { model: Author, as: "authors", through: { attributes: [] } },
-          ],
-        },
-      ],
-    });
-
-    if (!userBook) {
-      return res.status(404).json({ message: "Book not found in your list" });
-    }
-
-    const previousStatus = userBook.status;
-
-    // Update fields
-    const previousPage = Number.isFinite(Number(userBook.currentPage))
-      ? Number(userBook.currentPage)
-      : 0;
     let normalizedCurrentPage;
-
-    if (status) userBook.status = status;
-    if (startDate) userBook.startDate = startDate;
-    if (endDate) userBook.endDate = endDate;
     if (currentPage !== undefined) {
       normalizedCurrentPage = Number(currentPage);
       if (
@@ -259,80 +233,133 @@ router.put("/:id", auth, async (req, res) => {
           .status(400)
           .json({ message: "currentPage must be a non-negative integer" });
       }
-      userBook.currentPage = normalizedCurrentPage;
     }
 
-    // Keep streak data in sync for web progress updates.
-    if (
-      normalizedCurrentPage !== undefined &&
-      normalizedCurrentPage > previousPage
-    ) {
-      await ReadingLog.create({
-        userId: req.userId,
-        userBookId: userBook.id,
-        bookId: userBook.bookId,
-        pagesRead: normalizedCurrentPage - previousPage,
-        startPage: previousPage,
-        endPage: normalizedCurrentPage,
-        loggedAt: new Date(),
-      });
-    }
-
-    // If marked as finished, set endDate and create read history
-    if (status === "finished" && previousStatus !== "finished") {
-      userBook.endDate = endDate || new Date();
-
-      // Add to read history with rating and notes
-      await ReadHistory.create({
-        userId: req.userId,
-        bookId: userBook.bookId,
-        startDate: userBook.startDate,
-        endDate: userBook.endDate,
-        rating: normalizedRating,
-        notes: notes || null,
-      });
-    } else if (
-      status &&
-      status !== "finished" &&
-      previousStatus === "finished"
-    ) {
-      // Reverting from finished means the read should no longer count toward achievements.
-      await ReadHistory.destroy({
-        where: {
-          userId: req.userId,
-          bookId: userBook.bookId,
-        },
-      });
-    } else if (
-      (previousStatus === "finished" || userBook.status === "finished") &&
-      (rating !== undefined || notes !== undefined)
-    ) {
-      // If already finished, update the read history with new rating/notes
-      const readHistory = await ReadHistory.findOne({
-        where: {
-          userId: req.userId,
-          bookId: userBook.bookId,
-        },
-        order: [["endDate", "DESC"]],
+    // Run the read-modify-write as a locked transaction so concurrent/rapid
+    // requests for the same book can't race on `previousPage`, which would
+    // otherwise create duplicate/inflated ReadingLog entries.
+    const result = await UserBook.sequelize.transaction(async (transaction) => {
+      const userBook = await UserBook.findOne({
+        where: { id: req.params.id, userId: req.userId },
+        transaction,
+        lock: transaction.LOCK.UPDATE,
       });
 
-      if (readHistory) {
-        if (rating !== undefined) readHistory.rating = normalizedRating;
-        if (notes !== undefined) readHistory.notes = notes;
-        await readHistory.save();
+      if (!userBook) {
+        return { notFound: true };
       }
+
+      const previousStatus = userBook.status;
+      const previousPage = Number.isFinite(Number(userBook.currentPage))
+        ? Number(userBook.currentPage)
+        : 0;
+
+      // Update fields
+      if (status) userBook.status = status;
+      if (startDate) userBook.startDate = startDate;
+      if (endDate) userBook.endDate = endDate;
+      if (normalizedCurrentPage !== undefined) {
+        userBook.currentPage = normalizedCurrentPage;
+      }
+
+      // Keep streak data in sync for web progress updates.
+      if (
+        normalizedCurrentPage !== undefined &&
+        normalizedCurrentPage > previousPage
+      ) {
+        await ReadingLog.create(
+          {
+            userId: req.userId,
+            userBookId: userBook.id,
+            bookId: userBook.bookId,
+            pagesRead: normalizedCurrentPage - previousPage,
+            startPage: previousPage,
+            endPage: normalizedCurrentPage,
+            loggedAt: new Date(),
+          },
+          { transaction },
+        );
+      }
+
+      // If marked as finished, set endDate and create read history
+      if (status === "finished" && previousStatus !== "finished") {
+        userBook.endDate = endDate || new Date();
+
+        // Add to read history with rating and notes
+        await ReadHistory.create(
+          {
+            userId: req.userId,
+            bookId: userBook.bookId,
+            startDate: userBook.startDate,
+            endDate: userBook.endDate,
+            rating: normalizedRating,
+            notes: notes || null,
+          },
+          { transaction },
+        );
+      } else if (
+        status &&
+        status !== "finished" &&
+        previousStatus === "finished"
+      ) {
+        // Reverting from finished means the read should no longer count toward achievements.
+        await ReadHistory.destroy({
+          where: {
+            userId: req.userId,
+            bookId: userBook.bookId,
+          },
+          transaction,
+        });
+      } else if (
+        (previousStatus === "finished" || userBook.status === "finished") &&
+        (rating !== undefined || notes !== undefined)
+      ) {
+        // If already finished, update the read history with new rating/notes
+        const readHistory = await ReadHistory.findOne({
+          where: {
+            userId: req.userId,
+            bookId: userBook.bookId,
+          },
+          order: [["endDate", "DESC"]],
+          transaction,
+        });
+
+        if (readHistory) {
+          if (rating !== undefined) readHistory.rating = normalizedRating;
+          if (notes !== undefined) readHistory.notes = notes;
+          await readHistory.save({ transaction });
+        }
+      }
+
+      await userBook.save({ transaction });
+
+      return { notFound: false, userBookId: userBook.id };
+    });
+
+    if (result.notFound) {
+      return res.status(404).json({ message: "Book not found in your list" });
     }
 
-    await userBook.save();
     await reconcileAchievementsForUser(req.userId);
 
     // Fetch updated book with rating and notes
-    const userBookData = userBook.toJSON();
-    if (userBook.status === "finished") {
+    const userBookWithDetails = await UserBook.findByPk(result.userBookId, {
+      include: [
+        {
+          model: Book,
+          include: [
+            { model: Author, as: "authors", through: { attributes: [] } },
+          ],
+        },
+      ],
+    });
+
+    const userBookData = userBookWithDetails.toJSON();
+    if (userBookWithDetails.status === "finished") {
       const readHistory = await ReadHistory.findOne({
         where: {
           userId: req.userId,
-          bookId: userBook.bookId,
+          bookId: userBookWithDetails.bookId,
         },
         order: [["endDate", "DESC"]],
       });

@@ -5,6 +5,18 @@ import api from "../services/api";
 import { resolveAchievementIcon } from "../utils/achievementIcon";
 import "./Dashboard.css";
 
+const GOAL_TYPE_LABELS = {
+  daily: "Daily",
+  weekly: "Weekly",
+  monthly: "Monthly",
+  yearly: "Yearly",
+};
+
+const GOAL_METRIC_LABELS = {
+  pages: "Pages",
+  books: "Books",
+};
+
 const Dashboard = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState({
@@ -18,6 +30,7 @@ const Dashboard = () => {
   const [recentBooks, setRecentBooks] = useState([]);
   const [friends, setFriends] = useState([]);
   const [recentAchievements, setRecentAchievements] = useState([]);
+  const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,16 +41,24 @@ const Dashboard = () => {
           achievementsResponse,
           friendsResponse,
           streakResponse,
+          goalsResponse,
         ] = await Promise.all([
           api.get("/user-books"),
           api.get("/achievements/user"),
           api.get("/friends"),
           api.get("/users/me/streak"),
+          api.get("/goals", {
+            params: {
+              activeOnly: true,
+              tzOffsetMinutes: -new Date().getTimezoneOffset(),
+            },
+          }),
         ]);
 
         const userBooks = booksResponse.data.userBooks;
         const userAchievements = achievementsResponse.data.userAchievements;
         const friendsList = friendsResponse.data.friends || [];
+        const activeGoals = goalsResponse.data.goals || [];
 
         // Calculate stats
         const reading = userBooks.filter((b) => b.status === "reading").length;
@@ -64,6 +85,7 @@ const Dashboard = () => {
         setRecentBooks(userBooks.slice(0, 5));
         setRecentAchievements(userAchievements.slice(0, 7));
         setFriends(friendsList);
+        setGoals(activeGoals);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -81,6 +103,7 @@ const Dashboard = () => {
   const readingBook = recentBooks.find((b) => b.status === "reading");
   const featuredFriend = friends.slice(0, 3); //Show first three friends if we have them, otherwise just one or none
   const friendCount = friends.length;
+  const primaryGoal = goals.find((g) => g.isPrimary) || goals[0] || null;
 
   const formatLastReadLabel = (dateString) => {
     if (!dateString) {
@@ -146,6 +169,41 @@ const Dashboard = () => {
           </span>
         </div>
       </div>
+
+      {primaryGoal ? (
+        <div className="dashboard-section goal-highlight">
+          <div className="goal-highlight-header">
+            <h2>
+              🎯 {GOAL_TYPE_LABELS[primaryGoal.type]}{" "}
+              {GOAL_METRIC_LABELS[primaryGoal.metric]} Goal
+            </h2>
+            <Link to="/goals" className="goal-highlight-link">
+              View Goals
+            </Link>
+          </div>
+          <div className="progress-bar-small goal-highlight-bar">
+            <div
+              className="progress-fill-small"
+              style={{ width: `${primaryGoal.progress.percentComplete}%` }}
+            />
+          </div>
+          <p className="goal-highlight-text">
+            {primaryGoal.progress.currentValue} / {primaryGoal.progress.target}{" "}
+            {GOAL_METRIC_LABELS[primaryGoal.metric].toLowerCase()} (
+            {primaryGoal.progress.percentComplete}%)
+            {primaryGoal.progress.isComplete && " · Complete! 🎉"}
+          </p>
+        </div>
+      ) : (
+        <div className="dashboard-section goal-highlight goal-highlight-empty">
+          <h2>🎯 Reading Goal</h2>
+          <p>
+            You haven&apos;t set a reading goal yet.{" "}
+            <Link to="/goals">Create one</Link> to track your pace.
+          </p>
+        </div>
+      )}
+
       {/* Contextual Quick Actions */}
       <div className="quick-actions">
         {recentBooks.length === 0 ? (

@@ -279,6 +279,36 @@ router.put("/:id", auth, async (req, res) => {
           },
           { transaction },
         );
+      } else if (
+        normalizedCurrentPage !== undefined &&
+        normalizedCurrentPage < previousPage
+      ) {
+        let pagesToRemove = previousPage - normalizedCurrentPage;
+        const readingLogs = await ReadingLog.findAll({
+          where: {
+            userId: req.userId,
+            userBookId: userBook.id,
+          },
+          order: [
+            ["loggedAt", "DESC"],
+            ["id", "DESC"],
+          ],
+          transaction,
+          lock: transaction.LOCK.UPDATE,
+        });
+
+        for (const readingLog of readingLogs) {
+          if (pagesToRemove <= 0) break;
+
+          if (readingLog.pagesRead <= pagesToRemove) {
+            pagesToRemove -= readingLog.pagesRead;
+            await readingLog.destroy({ transaction });
+          } else {
+            readingLog.pagesRead -= pagesToRemove;
+            await readingLog.save({ transaction });
+            pagesToRemove = 0;
+          }
+        }
       }
 
       // If marked as finished, set endDate and create read history

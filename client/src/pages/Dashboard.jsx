@@ -198,8 +198,8 @@ const Dashboard = () => {
         <div className="dashboard-section goal-highlight goal-highlight-empty">
           <h2>🎯 Reading Goal</h2>
           <p>
-            You haven&apos;t set a reading goal yet.{" "}
-            <Link to="/goals">Create one</Link> to track your pace.
+            You haven&apos;t set or pinned a reading goal yet.{" "}
+            Head to the <Link to="/goals">goals page</Link> to set one.
           </p>
         </div>
       )}

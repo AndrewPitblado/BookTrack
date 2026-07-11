@@ -103,7 +103,7 @@ const Dashboard = () => {
   const readingBook = recentBooks.find((b) => b.status === "reading");
   const featuredFriend = friends.slice(0, 3); //Show first three friends if we have them, otherwise just one or none
   const friendCount = friends.length;
-  const primaryGoal = goals.find((g) => g.isPrimary) || goals[0] || null;
+  const primaryGoal = goals.find((g) => g.isPrimary) || null;
 
   const formatLastReadLabel = (dateString) => {
     if (!dateString) {

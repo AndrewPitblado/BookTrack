@@ -305,6 +305,11 @@ router.put("/:id", auth, async (req, res) => {
             await readingLog.destroy({ transaction });
           } else {
             readingLog.pagesRead -= pagesToRemove;
+            if (readingLog.startPage !== null) {
+              readingLog.endPage = readingLog.startPage + readingLog.pagesRead;
+            } else if (readingLog.endPage !== null) {
+              readingLog.endPage -= pagesToRemove;
+            }
             await readingLog.save({ transaction });
             pagesToRemove = 0;
           }
@@ -410,22 +415,39 @@ router.put("/:id", auth, async (req, res) => {
 // DELETE /api/user-books/:id - Remove book from list
 router.delete("/:id", auth, async (req, res) => {
   try {
-    const userBook = await UserBook.findOne({
-      where: { id: req.params.id, userId: req.userId },
-    });
+    const deleted = await UserBook.sequelize.transaction(
+      async (transaction) => {
+        const userBook = await UserBook.findOne({
+          where: { id: req.params.id, userId: req.userId },
+          transaction,
+          lock: transaction.LOCK.UPDATE,
+        });
 
-    if (!userBook) {
+        if (!userBook) {
+          return false;
+        }
+
+        await ReadingLog.destroy({
+          where: { userId: req.userId, userBookId: userBook.id },
+          transaction,
+        });
+
+        await ReadHistory.destroy({
+          where: {
+            userId: req.userId,
+            bookId: userBook.bookId,
+          },
+          transaction,
+        });
+
+        await userBook.destroy({ transaction });
+        return true;
+      },
+    );
+
+    if (!deleted) {
       return res.status(404).json({ message: "Book not found in your list" });
     }
-
-    await ReadHistory.destroy({
-      where: {
-        userId: req.userId,
-        bookId: userBook.bookId,
-      },
-    });
-
-    await userBook.destroy();
     await reconcileAchievementsForUser(req.userId);
 
     res.json({ message: "Book removed from your list" });

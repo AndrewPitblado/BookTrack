@@ -14,31 +14,31 @@ const FriendProfile = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    const fetchFriendData = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        // Fetch all data in parallel
+        const [statsRes, booksRes, achievementsRes] = await Promise.all([
+          api.get(`/friends/${userId}/stats`),
+          api.get(`/friends/${userId}/books`),
+          api.get(`/friends/${userId}/achievements`),
+        ]);
+
+        setProfile(statsRes.data.user);
+        setStats(statsRes.data.stats);
+        setBooks(booksRes.data.userBooks);
+        setAchievements(achievementsRes.data.userAchievements);
+      } catch (err) {
+        console.error("Error fetching friend data:", err);
+        setError(err.response?.data?.message || "Error loading friend profile");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchFriendData();
   }, [userId]);
-
-  const fetchFriendData = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      // Fetch all data in parallel
-      const [statsRes, booksRes, achievementsRes] = await Promise.all([
-        api.get(`/friends/${userId}/stats`),
-        api.get(`/friends/${userId}/books`),
-        api.get(`/friends/${userId}/achievements`),
-      ]);
-
-      setProfile(statsRes.data.user);
-      setStats(statsRes.data.stats);
-      setBooks(booksRes.data.userBooks);
-      setAchievements(achievementsRes.data.userAchievements);
-    } catch (err) {
-      console.error("Error fetching friend data:", err);
-      setError(err.response?.data?.message || "Error loading friend profile");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return <div className="loading">Loading friend profile...</div>;

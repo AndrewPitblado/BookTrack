@@ -93,9 +93,10 @@ const Achievements = () => {
       case 'progress':
         return b.progress.percentage - a.progress.percentage;
       case 'tier':
-      default:
+      default: {
         const tierOrder = { platinum: 0, gold: 1, silver: 2, bronze: 3 };
         return tierOrder[a.tier] - tierOrder[b.tier];
+      }
     }
   });
 
